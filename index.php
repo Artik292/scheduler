@@ -13,8 +13,8 @@ $reminder->set('Cienījamie vecāki! Lūdzam ievērot reglamentu: no 17.00 līdz
 
 $app->add(['ui'=>'hidden divider']);
 
-$app->add(['Label','This app is made by Colibri School students','red right ribbon'])
-->link('http://colibrischool.lv');
+// $app->add(['Label','This app is made by Colibri School students','red right ribbon'])
+// ->link('http://colibrischool.lv');
 
 $app->add(['Header','2018.gada 22.martā plkst. 17.00 - 19.00.','tiny','aligned' => 'center']);
 

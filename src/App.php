@@ -39,7 +39,7 @@ class App extends \atk4\ui\App {
        if (isset($_ENV['CLEARDB_DATABASE_URL'])) {
             $this->db = \atk4\data\Persistence::connect($_ENV['CLEARDB_DATABASE_URL']);
         } else {
-            $this->db = \atk4\data\Persistence::connect('mysql:host=127.0.0.1;dbname=scheduler;charset=utf8', 'root', '');
+            $this->db = \atk4\data\Persistence::connect('mysql:host=localhost;dbname=testdb', 'root', 'rootpassword');
         }
 
 }

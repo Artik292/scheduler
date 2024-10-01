@@ -28,7 +28,7 @@ SET time_zone = "+00:00";
 -- Структура таблицы `subject`
 --
 
-CREATE TABLE `subject` (
+CREATE TABLE IF NOT EXISTS `subject` (
   `id` int(11) UNSIGNED NOT NULL,
   `name` varchar(255) DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
@@ -51,11 +51,12 @@ INSERT INTO `subject` (`id`, `name`) VALUES
 -- Структура таблицы `teacher`
 --
 
-CREATE TABLE `teacher` (
+CREATE TABLE IF NOT EXISTS `teacher` (
   `id` int(11) UNSIGNED NOT NULL,
   `name` varchar(255) DEFAULT NULL,
   `cabinet` varchar(50) DEFAULT NULL,
-  `subject_id` int(11) UNSIGNED NOT NULL
+  `subject_id` int(11) UNSIGNED NOT NULL,
+  `available` bool DEFAULT TRUE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
 --
@@ -93,12 +94,55 @@ INSERT INTO `teacher` (`id`, `name`, `cabinet`, `subject_id`) VALUES
 -- --------------------------------------------------------
 
 --
+-- Структура таблицы `counter`
+--
+
+CREATE TABLE IF NOT EXISTS `counter` (
+  `id` int(11) UNSIGNED NOT NULL,
+  `counter` int(11) DEFAULT 0
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+
+--
+-- Дамп данных таблицы `counter`
+--
+
+INSERT INTO `counter` (`id`, `counter`) VALUES
+(1, 0);
+
+-- --------------------------------------------------------
+
+--
+-- Структура таблицы `texts`
+--
+
+CREATE TABLE IF NOT EXISTS `texts` (
+  `id` int(11) UNSIGNED NOT NULL,
+  `code` varchar(255) DEFAULT NULL,
+  `text` varchar(255) DEFAULT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+
+--
+-- Дамп данных таблицы `texts`
+--
+
+INSERT INTO `text` (`id`, `code`, `text`) VALUES
+(1, 'main_page_middle_text', 'Cienījamie vecāki! Lūdzam ievērot reglamentu: no 17.00 līdz 19.00.'),
+(2, 'main_page_sub_text', '2018.gada 22.martā plkst. 17.00 - 19.00.'),
+(3, 'parents_header', 'Lietošanas instrukcija'),
+(4, 'Fizikas,matemātikas un datorzinības zinatnes'),
+(166, 'Sports'),
+(167, 'Sākumskola');
+
+-- --------------------------------------------------------
+
+--
 -- Структура таблицы `vecaki`
 --
 
-CREATE TABLE `vecaki` (
+CREATE TABLE IF NOT EXISTS `vecaki` (
   `id` int(11) NOT NULL,
   `student_name` varchar(255) DEFAULT NULL,
+  `grade` varchar(255) DEFAULT NULL,
   `parent_name` varchar(255) DEFAULT NULL,
   `contact_phone` varchar(255) DEFAULT NULL,
   `time` varchar(20) DEFAULT NULL,

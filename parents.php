@@ -136,7 +136,7 @@ if($t) {
 }
 
 
-$app->add(['ui'=>'divider']);
-
-$app->add(['Label','This app is made by Colibri School students','red right ribbon'])
-->link('http://colibrischool.lv');
+// $app->add(['ui'=>'divider']);
+//
+// $app->add(['Label','This app is made by Colibri School students','red right ribbon'])
+// ->link('http://colibrischool.lv');

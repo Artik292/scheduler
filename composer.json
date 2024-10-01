@@ -8,5 +8,10 @@
     "atk4/ui": "*",
         "twilio/sdk": "^5.15",
         "h4cc/wkhtmltopdf-i386": "*"
-  }
+  },
+  "config": {
+        "platform": {
+            "php": "5.6.40"
+        }
+    }
 }
