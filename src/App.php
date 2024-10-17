@@ -31,6 +31,7 @@ class App extends \atk4\ui\App {
             $this->layout->leftMenu->addItem(['Priekšmeti', 'icon'=>'book'], ['admin','check'=>'lessons']);
             $this->layout->leftMenu->addItem(['Skolotāji', 'icon'=>'users'], ['admin','check'=>'teachers']);
             $this->layout->leftMenu->addItem(['Ieraksti', 'icon'=>'unordered list'], ['admin']);
+            $this->layout->leftMenu->addItem(['Virsraksti', 'icon'=>'pencil alternate'], ['admin','check'=>'text']);
         }elseif($mode == 'print') {
             $this->initLayout('Centered');
 

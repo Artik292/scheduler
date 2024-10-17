@@ -21,6 +21,9 @@ If (isset($_SESSION['admin_access'])) {
       } elseif ($check == 'teachers') {
         $crud->setModel(new Model\Teacher($app->db));
         $crud->addQuickSearch(['name','cabinet']);
+      } elseif ($check == 'text') {
+        $crud->setModel(new Model\Text($app->db));
+        $crud->addQuickSearch(['code','text']);
       }
 
     } else {

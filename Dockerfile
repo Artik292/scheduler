@@ -8,6 +8,17 @@ ENV DEBIAN_FRONTEND=noninteractive
 ENV MYSQL_ROOT_PASSWORD=rootpassword
 ENV MYSQL_DATABASE=testdb
 
+# Устанавливаем необходимые пакеты для локали
+RUN apt-get update && apt-get install -y locales
+
+# Генерируем локаль с поддержкой UTF-8
+RUN locale-gen ru_RU.UTF-8
+
+# Устанавливаем локаль по умолчанию на ru_RU.UTF-8
+ENV LANG=ru_RU.UTF-8 \
+    LANGUAGE=ru_RU:ru \
+    LC_ALL=ru_RU.UTF-8
+
 # Обновляем пакеты и устанавливаем необходимые зависимости
 RUN apt-get update && \
     apt-get install -y \
@@ -25,7 +36,7 @@ RUN apt-get update && \
 RUN add-apt-repository ppa:ondrej/php && apt-get update
 
 # Устанавливаем Apache, PHP 5.6 и необходимые модули
-RUN apt-get install -y \
+RUN apt install -y \
     apache2 \
     php5.6 \
     libapache2-mod-php5.6 \
@@ -37,10 +48,10 @@ RUN apt-get install -y \
     php5.6-mbstring \
     php5.6-zip
 
-# Установка MariaDB, совместимой с PHP 5.6 (версии MariaDB 10.3)
+# Устанавливаем MariaDB, совместимую с PHP 5.6 (версии MariaDB 10.3)
 RUN apt-get install -y mariadb-server-10.3 mariadb-client-10.3
 
-# Устанавливаем права на работу Apache
+# Настраиваем права для Apache
 RUN chown -R www-data:www-data /var/www/html
 
 # Включаем модуль Apache для переписывания URL
@@ -52,16 +63,12 @@ COPY ./000-default.conf /etc/apache2/sites-available/000-default.conf
 # Открываем порты для Apache и MariaDB
 EXPOSE 80 3306
 
-# Настраиваем MariaDB для автоматической установки root пароля
-RUN service mysql start
+# Скопируем точку входа
+COPY docker-entrypoint.sh /usr/local/bin/
+RUN chmod +x /usr/local/bin/docker-entrypoint.sh
 
+# Установка MariaDB и Apache при запуске
+ENTRYPOINT ["docker-entrypoint.sh"]
 
-
-# Запускаем Apache и MariaDB при старте контейнера
-CMD service apache2 start && service mysql start && \
-    mysqladmin -u root password "$MYSQL_ROOT_PASSWORD" && \
-    mysql -u root -p"$MYSQL_ROOT_PASSWORD" mysql -e "UPDATE user SET plugin='mysql_native_password' WHERE User='root';" && \
-    mysql -u root -p"$MYSQL_ROOT_PASSWORD" -e "FLUSH PRIVILEGES;" && \
-    mysql -u root -p"$MYSQL_ROOT_PASSWORD" -e "CREATE DATABASE IF NOT EXISTS $MYSQL_DATABASE;" && \
-    cat /var/www/html/docs/scheduler.sql |  mysql -u root -p"$MYSQL_ROOT_PASSWORD" $MYSQL_DATABASE && \
-    tail -f /var/log/apache2/access.log
+# Определим, что процесс в контейнере будет запускаться в foreground
+CMD ["apache2-foreground"]
