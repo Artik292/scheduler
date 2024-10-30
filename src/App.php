@@ -37,8 +37,8 @@ class App extends \atk4\ui\App {
 
             $this->layout->template->del('Header');
         }
-       if (isset($_ENV['CLEARDB_DATABASE_URL'])) {
-            $this->db = \atk4\data\Persistence::connect($_ENV['CLEARDB_DATABASE_URL']);
+       if (isset($_ENV['DATABASE_URL'])) {
+            $this->db = \atk4\data\Persistence::connect($_ENV['DATABASE_URL']);
         } else {
             $this->db = \atk4\data\Persistence::connect('mysql:host=localhost;dbname=testdb', 'root', 'rootpassword');
         }
