@@ -3,18 +3,28 @@
 require 'vendor/autoload.php';
 
 $app = new App('print');
-$app->layout->template->del('Header');
 
-$teacher=new Model\Teacher($app->db);
-$teacher->load($app->stickyGet('id'));
-$parents= $teacher->ref('Vecaki');
-$parents->setOrder('time');
+session_start();
 
-$header = $app->add(['Header',$teacher['name']]);
+If (isset($_SESSION['teachers_pass'])) {
+  If (($_SESSION['teachers_pass']) == 'nggyupn$g0lyoud)))') {
+    $app->layout->template->del('Header');
 
-$table = $app->add(['Table']);
-$table->setModel($parents,['time','student_name','grade','parent_name','contact_phone']);
+    $teacher=new Model\Teacher($app->db);
+    $teacher->load($app->stickyGet('id'));
+    $parents= $teacher->ref('Vecaki');
+    $parents->setOrder('time');
 
+    $header = $app->add(['Header',$teacher['name'].' '.$teacher['surname'].' '.$teacher['class']]);
+
+    $table = $app->add(['Table']);
+    $table->setModel($parents,['time','student_name','grade','parent_name','contact_phone']);
+  } else {
+    header('Location: index.php');
+  }
+} else {
+  header('Location: index.php');
+}
 /*$header = array('Vecaka Uzvards', 'Skolena Uzvards', 'Kontaktnumurs', 'Laiks');
 
 $pdf = new FPDF();

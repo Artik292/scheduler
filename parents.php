@@ -8,6 +8,9 @@ $back = $app->add(['Button','Atgriezties mājaslapā','green','icon'=>'reply'])
 
 $app->add(['ui'=>'hidden divider']);
 
+$text = new Model\Text($app->db);
+$text->tryLoadBy('code', 'parents_page_instruction_text');
+
 $col = $app->add('Columns');
 $col->addClass('stackable');
 $subject= new Model\Subject($app->db);
@@ -16,7 +19,7 @@ $c2 = $col->addColumn();
 $c3 = $col->addColumn();
 $c4 = $col->addColumn();
 $mes = $c4->add(['Message','Lietošanas instrukcija','massive info']);
-$mes->text->addParagraph('Izvēlaties priekšmētu, skolotāju un velāmo laiku. Ja Jūs uzskatāt, ka 5 min būs par maz, reģistrējāties uz diviem laikiem pēc kārtas.');
+$mes->text->addParagraph($text['text']);
 
 $table_s = $c1->add(['Table','very basic selectable'])->addStyle('cursor', 'pointer');
 $table_s->setModel($subject, [$subject->title_field]);
@@ -27,7 +30,7 @@ if ($pr) {
   $teacher = $subject->ref('Teacher');
   $teacher->setOrder('name');
   $table_t = $c2->add(['Table','very basic selectable'])->addStyle('cursor', 'pointer');
-  $table_t->setModel($teacher,[$teacher->title_field]);
+  $table_t->setModel($teacher,['name','surname','class']);
   $table_t->on('click', 'tr', $c3->jsReload(['t'=>$table_t->jsRow()->data('id')]));
 }
 $t = $app->stickyGet('t');
@@ -41,7 +44,7 @@ if($t) {
 
     $menu = $c3->add('Menu');
     $menu->addClass('vertical fluid');
-    $menu->addHeader('Laiki ('.$teacher['name'].')');
+    $menu->addHeader('Laiki ('.$teacher['name'].' '.$teacher['surname'].' '.$teacher['class'].')');
 
     $vir = $app->add('VirtualPage');
     $vir->set(function($vir) use($parentss,$app,$teacher_id,$t) {
@@ -93,7 +96,7 @@ if($t) {
 
     $min=0;
     for ($hour=17;$hour<=18;$hour++) {
-      for ($i=1;$i<=12;$i++) {
+      for ($i=1;$i<=6;$i++) {
         if ($min>=60) {
           $min=0;
         }
@@ -124,7 +127,7 @@ if($t) {
           }else {
             $menu->addItem($time)->on('click', new \atk4\ui\jsModal('Ieraksts',$vir,['time'=>$time]));
           }
-        $min=$min+5;
+        $min=$min+10;
       }
     }
   } else {

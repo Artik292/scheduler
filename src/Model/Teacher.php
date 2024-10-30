@@ -9,7 +9,9 @@ class Teacher extends \atk4\data\Model {
     function init() {
         parent::init();
 
-        $this->addField('name',['caption'=>'Uzvārds, vārds','required'=>TRUE]);
+        $this->addField('name',['caption'=>'Vārds','required'=>TRUE]);
+        $this->addField('surname',['caption'=>'Uzvārds','required'=>TRUE]);
+        $this->addField('class', ['caption'=>"Audzināmā klase"]); # Классный руководитель
         $this->addField('cabinet',['caption'=>'Kabinets','required'=>TRUE]);
         $this->addField('available',['caption'=>'Būs','type'=>'boolean','required'=>TRUE]);
 
