@@ -37,6 +37,7 @@ on:
 
 env:
   PROJECT_ID: 'terraform-447811'
+  PROJECT_NAME: 'Terraform'
   REGION: 'europe-north1'
   SERVICE: 'github'
   WORKLOAD_IDENTITY_PROVIDER: 'projects/1047575615301/locations/global/workloadIdentityPools/github/providers/vecaku-diena'
@@ -58,7 +59,7 @@ jobs:
       # See https://github.com/google-github-actions/auth for more options,
       # including authenticating via a JSON credentials file.
       - name: Print project_id
-        run: echo "$PROJECT_ID"
+        run: echo "$PROJECT_NAME"
 
       - name: Print workload_identity_provider
         run: echo "$WORKLOAD_IDENTITY_PROVIDER"
@@ -68,7 +69,7 @@ jobs:
         uses: 'google-github-actions/auth@v2'
 
         with:
-          project_id: "$PROJECT_ID"
+          project_id: "$PROJECT_NAME"
           workload_identity_provider: "$WORKLOAD_IDENTITY_PROVIDER"
 
       # BEGIN - Docker auth and build
