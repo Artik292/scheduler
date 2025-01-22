@@ -69,8 +69,8 @@ jobs:
         uses: 'google-github-actions/auth@v2'
 
         with:
-          project_id: "$PROJECT_NAME"
-          workload_identity_provider: "$WORKLOAD_IDENTITY_PROVIDER"
+          project_id: "Terraform"
+          workload_identity_provider: "projects/1047575615301/locations/global/workloadIdentityPools/github/providers/vecaku-diena"
 
       # BEGIN - Docker auth and build
       #
