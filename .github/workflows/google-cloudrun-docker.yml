@@ -38,7 +38,7 @@ on:
 env:
   PROJECT_ID: 'terraform-447811'
   REGION: 'europe-north1'
-  SERVICE: 'vecaku-diena'
+  SERVICE: 'github@terraform-447811.iam.gserviceaccount.com'
   WORKLOAD_IDENTITY_PROVIDER: 'projects/1047575615301/locations/global/workloadIdentityPools/github/providers/vecaku-diena'
   
 jobs:
