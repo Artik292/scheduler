@@ -39,8 +39,8 @@ env:
   PROJECT_ID: 'terraform-447811'
   REGION: 'europe-north1'
   SERVICE: 'vecaku-diena'
-  WORKLOAD_IDENTITY_PROVIDER: 'projects/1047575615301/locations/global/workloadIdentityPools/github/subject/SUBJECT_ATTRIBUTE_VALUE'
-
+  WORKLOAD_IDENTITY_PROVIDER: 'projects/1047575615301/locations/global/workloadIdentityPools/github'
+                         #      projects/123456789/locations/global/workloadIdentityPools/my-pool/providers/my-provider
 jobs:
   deploy:
     runs-on: 'ubuntu-latest'
