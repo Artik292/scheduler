@@ -39,7 +39,7 @@ env:
   PROJECT_ID: 'terraform-447811'
   REGION: 'europe-north1'
   SERVICE: 'github'
-  WORKLOAD_IDENTITY_PROVIDER: '//iam.googleapis.com/projects/1047575615301/locations/global/workloadIdentityPools/github/providers/vecaku-diena'
+  WORKLOAD_IDENTITY_PROVIDER: 'projects/1047575615301/locations/global/workloadIdentityPools/github/providers/vecaku-diena'
   
 jobs:
   deploy:
