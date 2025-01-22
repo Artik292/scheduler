@@ -86,7 +86,8 @@ jobs:
         run: |-
           DOCKER_TAG="${{ env.REGION }}-docker.pkg.dev/${{ env.PROJECT_ID }}/${{ env.SERVICE }}:$( date +%s )"
           docker build --tag "${DOCKER_TAG}" .
-          docker push "${DOCKER_TAG}"
+          docker push europe-north1-docker.pkg.dev/terraform-447811/test/vecaku-diena:test
+          #docker push "${DOCKER_TAG}"
       - name: 'Deploy to Cloud Run'
 
         # END - Docker auth and build
