@@ -1,4 +1,4 @@
-name: Pull Docker Image
+name: Build and Push Docker Image
 
 on:
   push:
@@ -7,7 +7,7 @@ on:
     branches: [ "v2" ]
 
 jobs:
-  pull-image:
+  build:
     runs-on: ubuntu-latest
 
     permissions:
@@ -15,18 +15,55 @@ jobs:
       id-token: 'write'
 
     steps:
-    - name: Authenticate to Google Cloud
-      uses: google-github-actions/auth@v2
+    - uses: actions/checkout@v3
+    - name: Configure Docker daemon
+      uses: docker/login-action@v2
       with:
-        workload_identity_provider: "projects/terraform-447811/locations/global/workloadIdentityPools/github-pool/providers/github-provider"
-        service_account: "github@terraform-447811.iam.gserviceaccount.com"
+        username: 'oauth2accesstoken'
+        password: ${{ secrets.GCP_SERVICE_ACCOUNT }}
+    - name: Build the docker image
+      run: docker build -t gcr.io/${{ secrets.GCP_PROJECT_ID }}/${{ secrets.ARTIFACT_REGISTRY_URL }}:$GITHUB_SHA .
+    - name: Push the docker image
+      run: docker push gcr.io/${{ secrets.GCP_PROJECT_ID }}/${{ secrets.ARTIFACT_REGISTRY_URL }}:$GITHUB_SHA
+#######################################################################################################################################
 
-    - name: Configure Docker for Artifact Registry
-      run: gcloud auth configure-docker europe-north1-docker.pkg.dev
 
-    - name: Pull Docker Image
-      run: docker pull europe-north1-docker.pkg.dev/terraform-447811/test/vecaku-diena:gcp
 
+
+
+
+
+
+
+# name: Pull Docker Image
+
+# on:
+#   push:
+#     branches: [ "v2" ]
+#   pull_request:
+#     branches: [ "v2" ]
+
+# jobs:
+#   pull-image:
+#     runs-on: ubuntu-latest
+
+#     permissions:
+#       contents: 'read'
+#       id-token: 'write'
+
+#     steps:
+#     - name: Authenticate to Google Cloud
+#       uses: google-github-actions/auth@v2
+#       with:
+#         workload_identity_provider: "projects/terraform-447811/locations/global/workloadIdentityPools/github-pool/providers/github-provider"
+#         service_account: "github@terraform-447811.iam.gserviceaccount.com"
+
+#     - name: Configure Docker for Artifact Registry
+#       run: gcloud auth configure-docker europe-north1-docker.pkg.dev
+
+#     - name: Pull Docker Image
+#       run: docker pull europe-north1-docker.pkg.dev/terraform-447811/test/vecaku-diena:gcp
+#######################################################################################################################################
 
 
 # # This workflow build and push a Docker container to Google Artifact Registry
