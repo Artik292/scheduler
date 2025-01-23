@@ -87,10 +87,11 @@ jobs:
 
       - name: 'Build and Push Container'
         run: |-
+          docker pull europe-north1-docker.pkg.dev/terraform-447811/test/vecaku-diena:gcp
           #DOCKER_TAG="${{ env.REGION }}-docker.pkg.dev/${{ env.PROJECT_ID }}/test:$( date +%s )"
-          docker build --tag europe-north1-docker.pkg.dev/terraform-447811/test/vecaku-diena:gcp .
+          # docker build --tag europe-north1-docker.pkg.dev/terraform-447811/test/vecaku-diena:gcp .
           #docker build --tag "${DOCKER_TAG}" .
-          docker push europe-north1-docker.pkg.dev/terraform-447811/test/vecaku-diena:gcp
+          # docker push europe-north1-docker.pkg.dev/terraform-447811/test/vecaku-diena:gcp
           #docker push "${DOCKER_TAG}"
       - name: 'Deploy to Cloud Run'
 
