@@ -16,6 +16,29 @@ jobs:
 
     steps:
     - uses: actions/checkout@v3
+
+    - id: 'auth'
+      name: 'Authenticate to Google Cloud'
+      uses: 'google-github-actions/auth@v2'
+
+      with:
+        credentials_json: '${{ secrets.GOOGLE_CREDENTIALS }}'
+          # project_id: "terraform-447811"
+          # workload_identity_provider: "projects/1047575615301/locations/global/workloadIdentityPools/github/providers/vecaku-diena"
+
+      # BEGIN - Docker auth and build
+      #
+      # If you already have a container image, you can omit these steps.
+    - name: Authenticate Docker to Artifact Registry
+      run: gcloud auth configure-docker europe-north1-docker.pkg.dev
+
+    - name: 'Docker Auth'
+      uses: 'docker/login-action@v3'
+      with:
+          username: 'oauth2accesstoken'
+          password: '${{ steps.auth.outputs.auth_token }}'
+          registry: 'europe-north1-docker.pkg.dev'
+    
     - name: Configure Docker daemon
       uses: docker/login-action@v2
       with:
