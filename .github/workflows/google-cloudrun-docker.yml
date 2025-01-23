@@ -79,12 +79,12 @@ jobs:
       - name: Authenticate Docker to Artifact Registry
         run: gcloud auth configure-docker europe-north1-docker.pkg.dev
 
-      - name: 'Docker Auth'
-        uses: 'docker/login-action@v3'
-        with:
-          username: 'oauth2accesstoken'
-          password: '${{ steps.auth.outputs.auth_token }}'
-          registry: '${{ env.REGION }}-docker.pkg.dev'
+      # - name: 'Docker Auth'
+      #   uses: 'docker/login-action@v3'
+      #   with:
+      #     username: 'oauth2accesstoken'
+      #     password: '${{ steps.auth.outputs.auth_token }}'
+      #     registry: '${{ env.REGION }}-docker.pkg.dev'
 
       - name: 'Build and Push Container'
         run: |-
