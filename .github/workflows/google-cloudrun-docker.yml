@@ -70,7 +70,7 @@ jobs:
 
         with:
           # credentials_json: '${{ secrets.GOOGLE_CREDENTIALS }}'
-          token_format: access_token
+          # token_format: access_token
           project_id: "terraform-447811"
           workload_identity_provider: "projects/1047575615301/locations/global/workloadIdentityPools/github/providers/vecaku-diena"
           service_account: "github@terraform-447811.iam.gserviceaccount.com"
