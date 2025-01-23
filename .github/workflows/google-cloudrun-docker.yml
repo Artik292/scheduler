@@ -89,9 +89,9 @@ jobs:
           registry: '${{ env.REGION }}-docker.pkg.dev'
 
       - name: Build the docker image
-        run: docker build -t europe-north1-docker.pkg.dev/${{ secrets.GCP_PROJECT_ID }}/${{ secrets.ARTIFACT_REGISTRY_URL }}:$GITHUB_SHA .
+        run: docker build -t europe-north1-docker.pkg.dev/terraform-447811/test/vecaku-diena:gcp . #europe-north1-docker.pkg.dev/${{ secrets.GCP_PROJECT_ID }}/${{ secrets.ARTIFACT_REGISTRY_URL }}:$GITHUB_SHA .
       - name: Push the docker image
-        run: docker push europe-north1-docker.pkg.dev/${{ secrets.GCP_PROJECT_ID }}/${{ secrets.ARTIFACT_REGISTRY_URL }}:$GITHUB_SHA
+        run: docker push europe-north1-docker.pkg.dev/terraform-447811/test/vecaku-diena:gcp #europe-north1-docker.pkg.dev/${{ secrets.GCP_PROJECT_ID }}/${{ secrets.ARTIFACT_REGISTRY_URL }}:$GITHUB_SHA
 
       # - name: 'Build and Push Container'
       #   run: |-
