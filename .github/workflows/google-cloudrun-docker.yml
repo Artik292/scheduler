@@ -87,11 +87,14 @@ jobs:
           username: 'oauth2accesstoken'
           password: '${{ steps.auth.outputs.auth_token }}'
           registry: '${{ env.REGION }}-docker.pkg.dev'
+          
+      - name: list test
+        run: gcloud artifacts repositories list
 
-      - name: Build the docker image
-        run: docker build -t europe-north1-docker.pkg.dev/terraform-447811/test/vecaku-diena:gcp . #europe-north1-docker.pkg.dev/${{ secrets.GCP_PROJECT_ID }}/${{ secrets.ARTIFACT_REGISTRY_URL }}:$GITHUB_SHA .
-      - name: Push the docker image
-        run: docker push europe-north1-docker.pkg.dev/terraform-447811/test/vecaku-diena:gcp #europe-north1-docker.pkg.dev/${{ secrets.GCP_PROJECT_ID }}/${{ secrets.ARTIFACT_REGISTRY_URL }}:$GITHUB_SHA
+      # - name: Build the docker image
+      #   run: docker build -t europe-north1-docker.pkg.dev/terraform-447811/test/vecaku-diena:gcp . #europe-north1-docker.pkg.dev/${{ secrets.GCP_PROJECT_ID }}/${{ secrets.ARTIFACT_REGISTRY_URL }}:$GITHUB_SHA .
+      # - name: Push the docker image
+      #   run: docker push europe-north1-docker.pkg.dev/terraform-447811/test/vecaku-diena:gcp #europe-north1-docker.pkg.dev/${{ secrets.GCP_PROJECT_ID }}/${{ secrets.ARTIFACT_REGISTRY_URL }}:$GITHUB_SHA
 
       # - name: 'Build and Push Container'
       #   run: |-
