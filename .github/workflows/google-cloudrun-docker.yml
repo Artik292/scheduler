@@ -10,6 +10,10 @@ jobs:
   pull-image:
     runs-on: ubuntu-latest
 
+    permissions:
+      contents: 'read'
+      id-token: 'write'
+
     steps:
     - name: Authenticate to Google Cloud
       uses: google-github-actions/auth@v2
@@ -22,29 +26,6 @@ jobs:
 
     - name: Pull Docker Image
       run: docker pull europe-north1-docker.pkg.dev/terraform-447811/test/vecaku-diena:gcp
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 
