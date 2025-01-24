@@ -1,0 +1,419 @@
+{
+    "packages": [
+        {
+            "name": "atk4/core",
+            "version": "1.3.11",
+            "version_normalized": "1.3.11.0",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/atk4/core.git",
+                "reference": "8143b48440042c827e5b7c4247664aa5626088da"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/atk4/core/zipball/8143b48440042c827e5b7c4247664aa5626088da",
+                "reference": "8143b48440042c827e5b7c4247664aa5626088da",
+                "shasum": ""
+            },
+            "require": {
+                "php": ">=5.6.0",
+                "psr/log": "~1.0"
+            },
+            "require-dev": {
+                "codeclimate/php-test-reporter": "*",
+                "phpunit/phpunit": "<6",
+                "satooshi/php-coveralls": "^1.0",
+                "symfony/yaml": "~2.1|~3.0|~4.0"
+            },
+            "suggest": {
+                "symfony/yaml": "~2.1|~3.0|~4.0"
+            },
+            "time": "2019-05-21T05:55:55+00:00",
+            "type": "library",
+            "installation-source": "dist",
+            "autoload": {
+                "psr-4": {
+                    "atk4\\core\\": "src/"
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "authors": [
+                {
+                    "name": "Romans Malinovskis",
+                    "email": "romans@agiletoolkit.org",
+                    "homepage": "https://nearly.guru/"
+                }
+            ],
+            "description": "Agile Core - collection of PHP Traits for designing object-oriented frameworks",
+            "homepage": "https://github.com/atk4/core",
+            "keywords": [
+                "Agile Toolkit",
+                "framework",
+                "php",
+                "trains"
+            ],
+            "support": {
+                "issues": "https://github.com/atk4/core/issues",
+                "source": "https://github.com/atk4/core/tree/1.3.11"
+            },
+            "install-path": "../atk4/core"
+        },
+        {
+            "name": "atk4/data",
+            "version": "1.3.7",
+            "version_normalized": "1.3.7.0",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/atk4/data.git",
+                "reference": "7e429ee497243fdc4a3dc8d22f60716fd730b7f2"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/atk4/data/zipball/7e429ee497243fdc4a3dc8d22f60716fd730b7f2",
+                "reference": "7e429ee497243fdc4a3dc8d22f60716fd730b7f2",
+                "shasum": ""
+            },
+            "require": {
+                "atk4/core": "^1.3",
+                "atk4/dsql": "^1.2",
+                "php": ">=5.6.0"
+            },
+            "require-dev": {
+                "atk4/schema": "*",
+                "codeclimate/php-test-reporter": "*",
+                "phpunit/phpunit": "<6"
+            },
+            "time": "2018-08-16T07:49:46+00:00",
+            "type": "library",
+            "installation-source": "dist",
+            "autoload": {
+                "psr-4": {
+                    "atk4\\data\\": "src/"
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "authors": [
+                {
+                    "name": "Romans Malinovskis",
+                    "email": "romans@agiletoolkit.org",
+                    "homepage": "https://nearly.guru/"
+                }
+            ],
+            "description": "Agile Data - Database access abstraction framework",
+            "homepage": "https://github.com/atk4/data",
+            "keywords": [
+                "Active Record",
+                "builder",
+                "framework",
+                "mongodb",
+                "mysql",
+                "nosql",
+                "orm",
+                "postgresql",
+                "query",
+                "sql"
+            ],
+            "support": {
+                "issues": "https://github.com/atk4/data/issues",
+                "source": "https://github.com/atk4/data/tree/1.3.7"
+            },
+            "install-path": "../atk4/data"
+        },
+        {
+            "name": "atk4/dsql",
+            "version": "1.2.6",
+            "version_normalized": "1.2.6.0",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/atk4/dsql.git",
+                "reference": "82b39c73ef693a29d4e62fc826b4686125b298b9"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/atk4/dsql/zipball/82b39c73ef693a29d4e62fc826b4686125b298b9",
+                "reference": "82b39c73ef693a29d4e62fc826b4686125b298b9",
+                "shasum": ""
+            },
+            "require": {
+                "atk4/core": "^1.3",
+                "php": ">=5.6.0"
+            },
+            "require-dev": {
+                "codeclimate/php-test-reporter": "*",
+                "phpunit/dbunit": ">=1.2",
+                "phpunit/phpcov": "*",
+                "phpunit/phpunit": "<6"
+            },
+            "suggest": {
+                "jdorn/sql-formatter": "*"
+            },
+            "time": "2019-02-04T13:45:00+00:00",
+            "type": "library",
+            "installation-source": "dist",
+            "autoload": {
+                "psr-4": {
+                    "atk4\\dsql\\": "src/"
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "authors": [
+                {
+                    "name": "Romans Malinovskis",
+                    "email": "romans@agiletoolkit.org",
+                    "homepage": "https://nearly.guru/"
+                }
+            ],
+            "description": "Dynamic SQL Builder in PHP",
+            "homepage": "http://agiletoolkit.org/",
+            "keywords": [
+                "builder",
+                "framework",
+                "orm",
+                "sql"
+            ],
+            "support": {
+                "issues": "https://github.com/atk4/dsql/issues",
+                "source": "https://github.com/atk4/dsql/tree/release/1.2.6"
+            },
+            "abandoned": true,
+            "install-path": "../atk4/dsql"
+        },
+        {
+            "name": "atk4/ui",
+            "version": "1.7.1",
+            "version_normalized": "1.7.1.0",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/atk4/ui.git",
+                "reference": "1ca8f16ab7e4a499e9e25690eb237ab4be82940c"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/atk4/ui/zipball/1ca8f16ab7e4a499e9e25690eb237ab4be82940c",
+                "reference": "1ca8f16ab7e4a499e9e25690eb237ab4be82940c",
+                "shasum": ""
+            },
+            "require": {
+                "atk4/core": "<2",
+                "atk4/data": "<2",
+                "php": ">=5.6.0"
+            },
+            "require-dev": {
+                "behat/behat": "^3.4",
+                "behat/mink-extension": "^2.2",
+                "behat/mink-selenium2-driver": "^1.3",
+                "codeclimate/php-test-reporter": "*",
+                "fzaninotto/faker": "*",
+                "phpunit/phpcov": "^3.0",
+                "phpunit/phpunit": "<6"
+            },
+            "time": "2019-06-12T01:56:02+00:00",
+            "type": "library",
+            "installation-source": "dist",
+            "autoload": {
+                "psr-4": {
+                    "atk4\\ui\\": "src/"
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "authors": [
+                {
+                    "name": "Romans Malinovskis",
+                    "email": "romans@agiletoolkit.org",
+                    "homepage": "https://nearly.guru/"
+                }
+            ],
+            "description": "Agile UI - Web Component Framework written in PHP",
+            "homepage": "https://agiletoolkit.org/ui",
+            "keywords": [
+                "button",
+                "component",
+                "crud",
+                "form",
+                "framework",
+                "gadget",
+                "grid",
+                "render",
+                "ui",
+                "web",
+                "widget"
+            ],
+            "support": {
+                "issues": "https://github.com/atk4/ui/issues",
+                "source": "https://github.com/atk4/ui/tree/release/1.7.1"
+            },
+            "install-path": "../atk4/ui"
+        },
+        {
+            "name": "h4cc/wkhtmltopdf-i386",
+            "version": "0.12.4",
+            "version_normalized": "0.12.4.0",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/h4cc/wkhtmltopdf-i386.git",
+                "reference": "da14486ec8eba1873b026b56126ed02d2f2ae5e3"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/h4cc/wkhtmltopdf-i386/zipball/da14486ec8eba1873b026b56126ed02d2f2ae5e3",
+                "reference": "da14486ec8eba1873b026b56126ed02d2f2ae5e3",
+                "shasum": ""
+            },
+            "time": "2018-01-15T07:18:15+00:00",
+            "bin": [
+                "bin/wkhtmltopdf-i386"
+            ],
+            "type": "library",
+            "installation-source": "dist",
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "LGPL Version 3"
+            ],
+            "authors": [
+                {
+                    "name": "Julius Beckmann",
+                    "email": "github@h4cc.de"
+                }
+            ],
+            "description": "Convert html to pdf using webkit (qtwebkit). Static linked linux binary for i386 systems.",
+            "homepage": "http://wkhtmltopdf.org/",
+            "keywords": [
+                "binary",
+                "convert",
+                "pdf",
+                "snapshot",
+                "thumbnail",
+                "wkhtmltopdf"
+            ],
+            "support": {
+                "issues": "https://github.com/h4cc/wkhtmltopdf-i386/issues",
+                "source": "https://github.com/h4cc/wkhtmltopdf-i386/tree/master"
+            },
+            "install-path": "../h4cc/wkhtmltopdf-i386"
+        },
+        {
+            "name": "psr/log",
+            "version": "1.1.4",
+            "version_normalized": "1.1.4.0",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/php-fig/log.git",
+                "reference": "d49695b909c3b7628b6289db5479a1c204601f11"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/php-fig/log/zipball/d49695b909c3b7628b6289db5479a1c204601f11",
+                "reference": "d49695b909c3b7628b6289db5479a1c204601f11",
+                "shasum": ""
+            },
+            "require": {
+                "php": ">=5.3.0"
+            },
+            "time": "2021-05-03T11:20:27+00:00",
+            "type": "library",
+            "extra": {
+                "branch-alias": {
+                    "dev-master": "1.1.x-dev"
+                }
+            },
+            "installation-source": "dist",
+            "autoload": {
+                "psr-4": {
+                    "Psr\\Log\\": "Psr/Log/"
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "authors": [
+                {
+                    "name": "PHP-FIG",
+                    "homepage": "https://www.php-fig.org/"
+                }
+            ],
+            "description": "Common interface for logging libraries",
+            "homepage": "https://github.com/php-fig/log",
+            "keywords": [
+                "log",
+                "psr",
+                "psr-3"
+            ],
+            "support": {
+                "source": "https://github.com/php-fig/log/tree/1.1.4"
+            },
+            "install-path": "../psr/log"
+        },
+        {
+            "name": "twilio/sdk",
+            "version": "5.42.2",
+            "version_normalized": "5.42.2.0",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/twilio/twilio-php.git",
+                "reference": "0cfcb871b18a9c427dd9e8f0ed7458d43009b48a"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/twilio/twilio-php/zipball/0cfcb871b18a9c427dd9e8f0ed7458d43009b48a",
+                "reference": "0cfcb871b18a9c427dd9e8f0ed7458d43009b48a",
+                "shasum": ""
+            },
+            "require": {
+                "php": ">=5.5.0"
+            },
+            "require-dev": {
+                "apigen/apigen": "^4.1",
+                "guzzlehttp/guzzle": "^6.3",
+                "phpunit/phpunit": ">=4.5"
+            },
+            "suggest": {
+                "guzzlehttp/guzzle": "An HTTP client to execute the API requests"
+            },
+            "time": "2020-02-05T19:55:13+00:00",
+            "type": "library",
+            "installation-source": "dist",
+            "autoload": {
+                "psr-4": {
+                    "Twilio\\": "src/Twilio/"
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "authors": [
+                {
+                    "name": "Twilio API Team",
+                    "email": "api@twilio.com"
+                }
+            ],
+            "description": "A PHP wrapper for Twilio's API",
+            "homepage": "http://github.com/twilio/twilio-php",
+            "keywords": [
+                "api",
+                "sms",
+                "twilio"
+            ],
+            "support": {
+                "issues": "https://github.com/twilio/twilio-php/issues",
+                "source": "https://github.com/twilio/twilio-php/tree/5.42.2"
+            },
+            "install-path": "../twilio/sdk"
+        }
+    ],
+    "dev": true,
+    "dev-package-names": []
+}

@@ -1,6 +1,5 @@
 pdflib-4.1.2/
 fpdf181/
-vendor
 /dist
 *.bak
 .DS_Store
