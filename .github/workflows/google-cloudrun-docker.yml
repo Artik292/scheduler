@@ -46,7 +46,7 @@ jobs:
         run: docker build -t ${{ env.REGION }}-docker.pkg.dev/${{ secrets.GCP_PROJECT_ID }}/${{ env.REPO }}/${{ env.DOCKER_IMAGE_NAME }}:${{ env.TAG }} .
 
       - name: Push the docker image
-        run: docker ${{ env.REGION }}-docker.pkg.dev/${{ secrets.GCP_PROJECT_ID }}/${{ env.REPO }}/${{ env.DOCKER_IMAGE_NAME }}:${{ env.TAG }}
+        run: docker push ${{ env.REGION }}-docker.pkg.dev/${{ secrets.GCP_PROJECT_ID }}/${{ env.REPO }}/${{ env.DOCKER_IMAGE_NAME }}:${{ env.TAG }}
 
       # # - name: 'Build and Push Container'
       # #   run: |-
