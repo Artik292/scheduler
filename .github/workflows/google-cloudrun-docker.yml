@@ -35,12 +35,12 @@ jobs:
       - name: Authenticate Docker to Artifact Registry
         run: gcloud auth configure-docker ${{ env.REGION }}-docker.pkg.dev
 
-      - name: "Docker Auth"
-        uses: "docker/login-action@v3"
-        with:
-          username: "oauth2accesstoken"
-          password: "${{ steps.auth.outputs.auth_token }}"
-          registry: "${{ env.REGION }}-docker.pkg.dev"
+      # - name: "Docker Auth"
+      #   uses: "docker/login-action@v3"
+      #   with:
+      #     username: "oauth2accesstoken"
+      #     password: "${{ steps.auth.outputs.auth_token }}"
+      #     registry: "${{ env.REGION }}-docker.pkg.dev"
 
       - name: Build the docker image
         run: docker build -t ${{ env.REGION }}-docker.pkg.dev/${{ secrets.GOOGLE_PROJECT_ID }}/${{ env.REPO }}/${{ env.DOCKER_IMAGE_NAME }}:${{ env.TAG }} .
