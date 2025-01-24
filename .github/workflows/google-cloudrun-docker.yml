@@ -10,7 +10,7 @@ env:
   REGION: "europe-north1"
   REPO: "vecaku-diena"
   DOCKER_IMAGE_NAME: "vecaku-diena"
-  TAG: $( date +%Y-%m-%d_%H-%M )
+  TAG: latest #$( date +%Y-%m-%d_%H-%M )
 
 jobs:
   deploy:
