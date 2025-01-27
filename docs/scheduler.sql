@@ -1,6 +1,6 @@
 -- MySQL dump 10.19  Distrib 10.3.39-MariaDB, for debian-linux-gnu (x86_64)
 --
--- Host: localhost    Database: testdb
+-- Host: localhost    Database: vecaku-diena
 -- ------------------------------------------------------
 -- Server version	10.3.39-MariaDB-0ubuntu0.20.04.2
 
