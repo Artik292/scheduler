@@ -35,23 +35,16 @@ jobs:
       - name: Authenticate Docker to Artifact Registry
         run: gcloud auth configure-docker ${{ env.REGION }}-docker.pkg.dev
 
-      # - name: "Docker Auth"
-      #   uses: "docker/login-action@v3"
-      #   with:
-      #     username: "oauth2accesstoken"
-      #     password: "${{ steps.auth.outputs.auth_token }}"
-      #     registry: "${{ env.REGION }}-docker.pkg.dev"
+      - name: Build the docker image
+        run: docker build -t ${{ env.REGION }}-docker.pkg.dev/${{ secrets.GCP_PROJECT_ID }}/${{ env.REPO }}/${{ env.DOCKER_IMAGE_NAME }}:latest .
 
-      # - name: Build the docker image
-      #   run: docker build -t ${{ env.REGION }}-docker.pkg.dev/${{ secrets.GCP_PROJECT_ID }}/${{ env.REPO }}/${{ env.DOCKER_IMAGE_NAME }}:latest .
+      - name: Push the docker image (latest)
+        run: docker push ${{ env.REGION }}-docker.pkg.dev/${{ secrets.GCP_PROJECT_ID }}/${{ env.REPO }}/${{ env.DOCKER_IMAGE_NAME }}:latest
 
-      # - name: Push the docker image (latest)
-      #   run: docker push ${{ env.REGION }}-docker.pkg.dev/${{ secrets.GCP_PROJECT_ID }}/${{ env.REPO }}/${{ env.DOCKER_IMAGE_NAME }}:latest
-
-      # - name: Push the docker image (version)
-      #   run: |
-      #     docker tag ${{ env.REGION }}-docker.pkg.dev/${{ secrets.GCP_PROJECT_ID }}/${{ env.REPO }}/${{ env.DOCKER_IMAGE_NAME }}:latest ${{ env.REGION }}-docker.pkg.dev/${{ secrets.GCP_PROJECT_ID }}/${{ env.REPO }}/${{ env.DOCKER_IMAGE_NAME }}:${{ env.TAG }}
-      #     docker push ${{ env.REGION }}-docker.pkg.dev/${{ secrets.GCP_PROJECT_ID }}/${{ env.REPO }}/${{ env.DOCKER_IMAGE_NAME }}:${{ env.TAG }}
+      - name: Push the docker image (version)
+        run: |
+          docker tag ${{ env.REGION }}-docker.pkg.dev/${{ secrets.GCP_PROJECT_ID }}/${{ env.REPO }}/${{ env.DOCKER_IMAGE_NAME }}:latest ${{ env.REGION }}-docker.pkg.dev/${{ secrets.GCP_PROJECT_ID }}/${{ env.REPO }}/${{ env.DOCKER_IMAGE_NAME }}:${{ env.TAG }}
+          docker push ${{ env.REGION }}-docker.pkg.dev/${{ secrets.GCP_PROJECT_ID }}/${{ env.REPO }}/${{ env.DOCKER_IMAGE_NAME }}:${{ env.TAG }}
 
       - name: "Deploy to Cloud Run"
         uses: "google-github-actions/deploy-cloudrun@v2" # "google-github-actions/deploy-cloudrun@33553064113a37d688aa6937bacbdc481580be17"
