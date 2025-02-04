@@ -10,7 +10,7 @@ env:
   REGION: "europe-north1"
   REPO: "vecaku-diena"
   DOCKER_IMAGE_NAME: "vecaku-diena"
-  TAG: latest #$( date +%Y-%m-%d_%H-%M )
+  TAG: $( date +%Y-%m-%d_%H-%M )
 
 jobs:
   deploy:
@@ -43,10 +43,15 @@ jobs:
       #     registry: "${{ env.REGION }}-docker.pkg.dev"
 
       - name: Build the docker image
-        run: docker build -t ${{ env.REGION }}-docker.pkg.dev/${{ secrets.GCP_PROJECT_ID }}/${{ env.REPO }}/${{ env.DOCKER_IMAGE_NAME }}:${{ env.TAG }} .
+        run: docker build -t ${{ env.REGION }}-docker.pkg.dev/${{ secrets.GCP_PROJECT_ID }}/${{ env.REPO }}/${{ env.DOCKER_IMAGE_NAME }}:latest .
 
-      - name: Push the docker image
-        run: docker push ${{ env.REGION }}-docker.pkg.dev/${{ secrets.GCP_PROJECT_ID }}/${{ env.REPO }}/${{ env.DOCKER_IMAGE_NAME }}:${{ env.TAG }}
+      - name: Push the docker image (latest)
+        run: docker push ${{ env.REGION }}-docker.pkg.dev/${{ secrets.GCP_PROJECT_ID }}/${{ env.REPO }}/${{ env.DOCKER_IMAGE_NAME }}:latest
+
+      - name: Push the docker image (version)
+        run: |
+          docker tag ${{ env.REGION }}-docker.pkg.dev/${{ secrets.GCP_PROJECT_ID }}/${{ env.REPO }}/${{ env.DOCKER_IMAGE_NAME }}:latest ${{ env.REGION }}-docker.pkg.dev/${{ secrets.GCP_PROJECT_ID }}/${{ env.REPO }}/${{ env.DOCKER_IMAGE_NAME }}:${{ env.TAG }}
+          docker push ${{ env.REGION }}-docker.pkg.dev/${{ secrets.GCP_PROJECT_ID }}/${{ env.REPO }}/${{ env.DOCKER_IMAGE_NAME }}:${{ env.TAG }}
 
       # # - name: 'Build and Push Container'
       # #   run: |-
@@ -72,6 +77,7 @@ jobs:
       #   run: |2-
 
       #     echo ${{ steps.deploy.outputs.url }}
+
 ###########################################################################################
 # name: Build and Push Docker Image
 
