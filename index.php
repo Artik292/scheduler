@@ -2,8 +2,6 @@
 
 require "vendor/autoload.php";
 
-echo "LOL!";
-
 $app = new App("public");
 
 $button1 = $app->add(["Button", "Vecākiem", "massive red"]);
