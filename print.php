@@ -1,29 +1,42 @@
 <?php
 
-require 'vendor/autoload.php';
+require "vendor/autoload.php";
 
-$app = new App('print');
+$app = new App("print");
 
 session_start();
 
-If (isset($_SESSION['teachers_pass'])) {
-  If (($_SESSION['teachers_pass']) == 'nggyupn$g0lyoud)))') {
-    $app->layout->template->del('Header');
+if (isset($_SESSION["teachers_access"])) {
+    if ($_SESSION["teachers_access"] == 'nggyupn$g0lyoud)))') {
+        $app->layout->template->del("Header");
 
-    $teacher=new Model\Teacher($app->db);
-    $teacher->load($app->stickyGet('id'));
-    $parents= $teacher->ref('Vecaki');
-    $parents->setOrder('time');
+        $teacher = new Model\Teacher($app->db);
+        $teacher->load($app->stickyGet("id"));
+        $parents = $teacher->ref("Vecaki");
+        $parents->setOrder("time");
 
-    $header = $app->add(['Header',$teacher['name'].' '.$teacher['surname'].' '.$teacher['class']]);
+        $header = $app->add([
+            "Header",
+            $teacher["name"] .
+            " " .
+            $teacher["surname"] .
+            " " .
+            $teacher["class"],
+        ]);
 
-    $table = $app->add(['Table']);
-    $table->setModel($parents,['time','student_name','grade','parent_name','contact_phone']);
-  } else {
-    header('Location: index.php');
-  }
+        $table = $app->add(["Table"]);
+        $table->setModel($parents, [
+            "time",
+            "student_name",
+            "grade",
+            "parent_name",
+            "contact_phone",
+        ]);
+    } else {
+        header("Location: index.php");
+    }
 } else {
-  header('Location: index.php');
+    header("Location: index.php");
 }
 /*$header = array('Vecaka Uzvards', 'Skolena Uzvards', 'Kontaktnumurs', 'Laiks');
 
