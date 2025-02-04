@@ -1,7 +1,6 @@
 <?php
 
 require "vendor/autoload.php";
-// echo $_SERVER["SERVER_ADDR"];
 
 $app = new App("public");
 
