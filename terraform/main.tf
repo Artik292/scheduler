@@ -32,11 +32,18 @@ locals {
   db_deletion_protection = false
 }
 
+# provider "google" {
+#   project = local.project
+#   region  = local.region
+#   zone    = local.zone
+# }
+
 provider "google" {
-  project = local.project
+  project = "vecaku-diena-476509"
   region  = local.region
   zone    = local.zone
 }
+
 # resource "google_compute_network" "peering_network" {
 #   name                    = "vecaku-diena-private-network"
 #   auto_create_subnetworks = "false"
