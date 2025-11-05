@@ -5,30 +5,32 @@ namespace Twilio;
 
 
 class Values implements \ArrayAccess {
-    const NONE = 'Twilio\\Values\\NONE';
-
+    public const NONE = 'Twilio\\Values\\NONE';
+    public const ARRAY_NONE = [self::NONE];
+    public const INT_NONE = 0;
+    public const BOOL_NONE = false;
     protected $options;
+    private static $noneConstants = array(self::NONE, self::ARRAY_NONE, self::INT_NONE, self::BOOL_NONE);
 
-    public static function array_get($array, $key, $default = null) {
+    public static function array_get(array $array, string $key, ?string $default = null) {
         if (\array_key_exists($key, $array)) {
             return $array[$key];
         }
         return $default;
     }
 
-    public static function of($array) {
-        $result = array();
+    public static function of(array $array): array {
+        $result = [];
         foreach ($array as $key => $value) {
-            if ($value === self::NONE) {
-                continue;
+            if (!in_array($value, self::$noneConstants, true)) {
+                $result[$key] = $value;
             }
-            $result[$key] = $value;
         }
         return $result;
     }
 
-    public function __construct($options) {
-        $this->options = array();
+    public function __construct(array $options) {
+        $this->options = [];
         foreach ($options as $key => $value) {
             $this->options[\strtolower($key)] = $value;
         }
@@ -36,17 +38,17 @@ class Values implements \ArrayAccess {
 
     /**
      * (PHP 5 &gt;= 5.0.0)<br/>
-     * Whether a offset exists
+     * Whether an offset exists
      * @link http://php.net/manual/en/arrayaccess.offsetexists.php
      * @param mixed $offset <p>
      * An offset to check for.
      * </p>
-     * @return boolean true on success or false on failure.
+     * @return bool true on success or false on failure.
      * </p>
      * <p>
      * The return value will be casted to boolean if non-boolean was returned.
      */
-    public function offsetExists($offset) {
+    public function offsetExists($offset): bool {
         return true;
     }
 
@@ -59,6 +61,7 @@ class Values implements \ArrayAccess {
      * </p>
      * @return mixed Can return all value types.
      */
+    #[\ReturnTypeWillChange]
     public function offsetGet($offset) {
         $offset = \strtolower($offset);
         return \array_key_exists($offset, $this->options) ? $this->options[$offset] : self::NONE;
@@ -76,7 +79,7 @@ class Values implements \ArrayAccess {
      * </p>
      * @return void
      */
-    public function offsetSet($offset, $value) {
+    public function offsetSet($offset, $value): void {
         $this->options[\strtolower($offset)] = $value;
     }
 
@@ -89,9 +92,7 @@ class Values implements \ArrayAccess {
      * </p>
      * @return void
      */
-    public function offsetUnset($offset) {
+    public function offsetUnset($offset): void {
         unset($this->options[$offset]);
     }
-
-
 }

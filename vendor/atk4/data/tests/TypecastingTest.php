@@ -34,7 +34,6 @@ class MyDateTime extends \DateTime
  */
 class TypecastingTest extends \atk4\schema\PHPUnit_SchemaTestCase
 {
-    //    public $debug = true;
     public function testType()
     {
         $a = [
@@ -44,7 +43,7 @@ class TypecastingTest extends \atk4\schema\PHPUnit_SchemaTestCase
                     'date'     => '2013-02-20',
                     'datetime' => '2013-02-20 20:00:12',
                     'time'     => '12:00:50',
-                    'boolean'  => '1',
+                    'boolean'  => 1,
                     'integer'  => '2940',
                     'money'    => '8.20',
                     'float'    => '8.202343',

@@ -1,9 +1,9 @@
 <?php return array(
     'root' => array(
         'name' => '__root__',
-        'pretty_version' => 'dev-master',
-        'version' => 'dev-master',
-        'reference' => '80919d11996051fd5796ce018d212959441f40f6',
+        'pretty_version' => '2.x-dev',
+        'version' => '2.9999999.9999999.9999999-dev',
+        'reference' => '1d84a20dce85ed74dab5e3355c4adc7bd846f709',
         'type' => 'library',
         'install_path' => __DIR__ . '/../../',
         'aliases' => array(),
@@ -11,9 +11,9 @@
     ),
     'versions' => array(
         '__root__' => array(
-            'pretty_version' => 'dev-master',
-            'version' => 'dev-master',
-            'reference' => '80919d11996051fd5796ce018d212959441f40f6',
+            'pretty_version' => '2.x-dev',
+            'version' => '2.9999999.9999999.9999999-dev',
+            'reference' => '1d84a20dce85ed74dab5e3355c4adc7bd846f709',
             'type' => 'library',
             'install_path' => __DIR__ . '/../../',
             'aliases' => array(),
@@ -29,9 +29,9 @@
             'dev_requirement' => false,
         ),
         'atk4/data' => array(
-            'pretty_version' => '1.3.7',
-            'version' => '1.3.7.0',
-            'reference' => '7e429ee497243fdc4a3dc8d22f60716fd730b7f2',
+            'pretty_version' => '1.4.1',
+            'version' => '1.4.1.0',
+            'reference' => '073dfb1d6c205f4f1a85759b46ba024a02887b1e',
             'type' => 'library',
             'install_path' => __DIR__ . '/../atk4/data',
             'aliases' => array(),
@@ -74,9 +74,9 @@
             'dev_requirement' => false,
         ),
         'twilio/sdk' => array(
-            'pretty_version' => '5.42.2',
-            'version' => '5.42.2.0',
-            'reference' => '0cfcb871b18a9c427dd9e8f0ed7458d43009b48a',
+            'pretty_version' => '8.8.5',
+            'version' => '8.8.5.0',
+            'reference' => '248dce83f5a0a21905cd4bf445080252cb04a8a6',
             'type' => 'library',
             'install_path' => __DIR__ . '/../twilio/sdk',
             'aliases' => array(),

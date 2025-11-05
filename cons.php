@@ -15,7 +15,19 @@ $where = 'https://vecaku-diena.herokuapp.com/print.php?id='.$_GET['id']; //not l
 //$file_name = '/tmp/'.$teacher['name'].'.pdf';
 $file_name = '"'.$teacher['name'].'.pdf';
 //$file_name = '/Applications/XAMPP/xamppfiles/htdocs/scheduler/'.$teacher['name'].'.pdf';
-$de_way = '/usr/local/bin/wkhtmltopdf';
+$candidates = array_filter([
+    getenv('WKHTMLTOPDF_BIN') ?: null,
+    '/usr/local/bin/wkhtmltopdf',
+    '/usr/bin/wkhtmltopdf',
+    'vendor/h4cc/wkhtmltopdf-i386/bin/wkhtmltopdf-i386',
+]);
+$de_way = 'wkhtmltopdf';
+foreach ($candidates as $binary) {
+    if ($binary && is_file($binary) && is_executable($binary)) {
+        $de_way = $binary;
+        break;
+    }
+}
 $request = $de_way.' "'.$where.'" "'.$file_name.'"';
 //echo $request;
 $t->exec($request);

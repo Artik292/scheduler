@@ -17,7 +17,7 @@ class Start extends TwiML {
      *
      * @param array $attributes Optional attributes
      */
-    public function __construct($attributes = array()) {
+    public function __construct($attributes = []) {
         parent::__construct('Start', null, $attributes);
     }
 
@@ -27,7 +27,7 @@ class Start extends TwiML {
      * @param array $attributes Optional attributes
      * @return Stream Child element.
      */
-    public function stream($attributes = array()) {
+    public function stream($attributes = []): Stream {
         return $this->nest(new Stream($attributes));
     }
 
@@ -37,17 +37,26 @@ class Start extends TwiML {
      * @param array $attributes Optional attributes
      * @return Siprec Child element.
      */
-    public function siprec($attributes = array()) {
+    public function siprec($attributes = []): Siprec {
         return $this->nest(new Siprec($attributes));
+    }
+
+    /**
+     * Add Transcription child.
+     *
+     * @param array $attributes Optional attributes
+     * @return Transcription Child element.
+     */
+    public function transcription($attributes = []): Transcription {
+        return $this->nest(new Transcription($attributes));
     }
 
     /**
      * Add Action attribute.
      *
      * @param string $action Action URL
-     * @return static $this.
      */
-    public function setAction($action) {
+    public function setAction($action): self {
         return $this->setAttribute('action', $action);
     }
 
@@ -55,9 +64,8 @@ class Start extends TwiML {
      * Add Method attribute.
      *
      * @param string $method Action URL method
-     * @return static $this.
      */
-    public function setMethod($method) {
+    public function setMethod($method): self {
         return $this->setAttribute('method', $method);
     }
 }

@@ -4,8 +4,11 @@
 namespace Twilio\Http;
 
 
+use Twilio\AuthStrategy\AuthStrategy;
+
 interface Client {
-    public function request($method, $url, $params = array(), $data = array(),
-                            $headers = array(), $user = null, $password = null,
-                            $timeout = null);
+    public function request(string $method, string $url,
+                            array $params = [], array $data = [], array $headers = [],
+                            ?string $user = null, ?string $password = null,
+                            ?int $timeout = null, ?AuthStrategy $authStrategy = null): Response;
 }

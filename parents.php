@@ -1,6 +1,10 @@
 <?php
 
 require 'vendor/autoload.php';
+
+use atk4\ui\jsExpression;
+use atk4\ui\jsReload;
+
 $app = new App('public');
 
 $back = $app->add(['Button','Atgriezties mājaslapā','green','icon'=>'reply'])
@@ -11,19 +15,36 @@ $app->add(['ui'=>'hidden divider']);
 $text = new Model\Text($app->db);
 $text->tryLoadBy('code', 'parents_page_instruction_text');
 
+$instructions = $app->add(['Message','Lietošanas instrukcija','info']);
+$instructions->addClass('fluid');
+$instructions->text->addParagraph($text['text']);
+
 $col = $app->add('Columns');
-$col->addClass('stackable');
+$col->addClass('stackable doubling');
 $subject= new Model\Subject($app->db);
 $c1 = $col->addColumn();
 $c2 = $col->addColumn();
 $c3 = $col->addColumn();
-$c4 = $col->addColumn();
-$mes = $c4->add(['Message','Lietošanas instrukcija','massive info']);
-$mes->text->addParagraph($text['text']);
+
+$scrollToTeachers = new jsExpression(
+    <<<'JS'
+if(window.matchMedia('(max-width: 768px)').matches){var $el = [el]; if($el.length){$('html, body').animate({scrollTop: Math.max(0, $el.offset().top - 16)}, 400);}}
+JS
+    ,
+    ['el' => $c2->js()]
+);
+
+$scrollToTimes = new jsExpression(
+    <<<'JS'
+if(window.matchMedia('(max-width: 768px)').matches){var $el = [el]; if($el.length){$('html, body').animate({scrollTop: Math.max(0, $el.offset().top - 16)}, 400);}}
+JS
+    ,
+    ['el' => $c3->js()]
+);
 
 $table_s = $c1->add(['Table','very basic selectable'])->addStyle('cursor', 'pointer');
 $table_s->setModel($subject, [$subject->title_field]);
-$table_s->on('click', 'tr', $c2->jsReload(['pr'=>$table_s->jsRow()->data('id')]));
+$table_s->on('click', 'tr', new jsReload($c2, ['pr'=>$table_s->jsRow()->data('id')], $scrollToTeachers));
 $pr = $app->stickyGet('pr');
 if ($pr) {
   $subject->load($pr);
@@ -31,7 +52,7 @@ if ($pr) {
   $teacher->setOrder('name');
   $table_t = $c2->add(['Table','very basic selectable'])->addStyle('cursor', 'pointer');
   $table_t->setModel($teacher,['name','surname','class']);
-  $table_t->on('click', 'tr', $c3->jsReload(['t'=>$table_t->jsRow()->data('id')]));
+  $table_t->on('click', 'tr', new jsReload($c3, ['t'=>$table_t->jsRow()->data('id')], $scrollToTimes));
 }
 $t = $app->stickyGet('t');
 if($t) {

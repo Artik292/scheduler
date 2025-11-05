@@ -8,9 +8,11 @@ class App extends \atk4\ui\App
     function __construct($mode)
     {
         parent::__construct("Vecāku diena");
+        error_reporting(E_ALL & ~E_DEPRECATED);
 
         if ($mode == "public") {
             $this->initLayout("Centered");
+            $this->includeCustomAssets();
 
             $this->layout->template->del("Header");
 
@@ -30,6 +32,7 @@ class App extends \atk4\ui\App
             );
         } elseif ($mode == "admin") {
             $this->initLayout("Admin");
+            $this->includeCustomAssets();
             $this->layout->leftMenu->addItem(
                 ["Galvenā lapa", "icon" => "home"],
                 ["logout"],
@@ -52,6 +55,7 @@ class App extends \atk4\ui\App
             );
         } elseif ($mode == "print") {
             $this->initLayout("Centered");
+            $this->includeCustomAssets();
 
             $this->layout->template->del("Header");
         }
@@ -62,6 +66,18 @@ class App extends \atk4\ui\App
                 "mysql:host=localhost;dbname=testdb",
                 "root",
                 "rootpassword",
+            );
+        }
+    }
+
+    private function includeCustomAssets(): void
+    {
+        $assetPath = "assets/css/app.css";
+        if ($this->html && file_exists($assetPath)) {
+            $version = filemtime($assetPath);
+            $this->html->template->appendHTML(
+                "HEAD",
+                sprintf('<link rel="stylesheet" href="%s?v=%s">', $assetPath, $version),
             );
         }
     }

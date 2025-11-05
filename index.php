@@ -4,9 +4,14 @@ require "vendor/autoload.php";
 
 $app = new App("public");
 
-$button1 = $app->add(["Button", "Vecākiem", "massive red"]);
+$buttons = $app->add("Columns");
+$buttons->addClass("stackable doubling equal width");
+$columnParents = $buttons->addColumn();
+$columnTeachers = $buttons->addColumn();
+
+$button1 = $columnParents->add(["Button", "Vecākiem", "massive red fluid"]);
 $button1->link(["parents"]);
-$button2 = $app->add(["Button", "Skolotājiem", "massive green right floated"]);
+$button2 = $columnTeachers->add(["Button", "Skolotājiem", "massive green fluid"]);
 $button2->link(["teachers_access"]);
 
 $reminder = $app->add(["ui" => "horizontal divider header"]);
