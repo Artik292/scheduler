@@ -131,3 +131,7 @@
 2024:
 8012 visitors
 471 records from 1020 available
+
+2025:
+1570 visitors
+527 records from 1224 available

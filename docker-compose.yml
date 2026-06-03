@@ -1,0 +1,28 @@
+version: '3.8'
+services:
+    www:
+        build: .
+        ports:
+            - "8080:80"
+        environment:
+            DATABASE_URL: "mysql://artik292:artik292@db/vecaku-diena"
+            pass: "change_me_admin"
+            teachers_pass: "change_me_teachers"
+        networks:
+            - default
+    db:
+        image: mariadb
+        expose:
+            - "3306"
+        volumes:
+            - ./docs/db-example.sql:/docker-entrypoint-initdb.d/init.sql:ro
+            - db_data:/var/lib/mysql
+        environment:
+            MYSQL_DATABASE: vecaku-diena
+            MYSQL_USER: artik292
+            MYSQL_PASSWORD: artik292
+            MYSQL_ROOT_PASSWORD: root
+        networks:
+            - default
+volumes:
+    db_data:

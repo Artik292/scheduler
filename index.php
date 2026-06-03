@@ -9,8 +9,8 @@ $buttons->addClass("stackable doubling equal width");
 $columnParents = $buttons->addColumn();
 $columnTeachers = $buttons->addColumn();
 
-// $button1 = $columnParents->add(["Button", "Vecākiem", "massive red fluid"]);
-// $button1->link(["parents"]);
+$button1 = $columnParents->add(["Button", "Vecākiem", "massive red fluid"]);
+$button1->link(["parents"]);
 $button2 = $columnTeachers->add(["Button", "Skolotājiem", "massive green fluid"]);
 $button2->link(["teachers_access"]);
 

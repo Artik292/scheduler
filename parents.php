@@ -7,8 +7,6 @@ use atk4\ui\jsReload;
 
 $app = new App('public');
 
-header('Location: index.php');
-
 $back = $app->add(['Button','Atgriezties mājaslapā','green','icon'=>'reply'])
 ->link(['index']);
 
