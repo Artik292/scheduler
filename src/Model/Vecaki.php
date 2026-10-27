@@ -1,22 +1,28 @@
 <?php
+
+declare(strict_types=1);
+
 namespace Model;
 
-class Vecaki extends \atk4\data\Model {
+class Vecaki extends \Atk4\Data\Model
+{
     public $table = 'vecaki';
-    public $title = 'Vecāki';
-    public $name = 'parent_name';
-    public $title_field = 'parent_name';
+    public $caption = 'Vecāki';
+    public ?string $titleField = 'parent_name';
 
-    function init() {
+    protected function init(): void
+    {
         parent::init();
-
-        $this->addField('student_name',['caption'=>'Skolnieka vārds un uzvārds','required'=>TRUE]);
-        $this->addField('grade',['caption'=>'Klase','required'=>TRUE]);
-        $this->addField('parent_name',['caption'=>'Vecāka vārds un uzvārds','required'=>TRUE]);
-        $this->addField('contact_phone',['caption'=>'Kontaktnumurs','required'=>TRUE]);
-        $this->addField('time',['caption'=>'Laiks']);
-        $this->hasOne('teacher_id', new Teacher)->addTitle();
+        foreach ([
+            'student_name' => 'Skolnieka vārds un uzvārds',
+            'grade' => 'Klase',
+            'parent_name' => 'Vecāka vārds un uzvārds',
+            'contact_phone' => 'Kontaktnumurs',
+        ] as $name => $caption) {
+            $this->addField($name, ['caption' => $caption, 'required' => true]);
+        }
+        $this->addField('time', ['caption' => 'Laiks', 'required' => true, 'enum' => \Scheduler\Booking::slots()]);
+        $this->hasOne('teacher_id', ['model' => [Teacher::class], 'required' => true])->addTitle();
         $this->setOrder('time');
-
     }
 }

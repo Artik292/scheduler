@@ -1,27 +1,20 @@
 <?php
 
-require 'vendor/autoload.php';
-$app = new App('public');
+declare(strict_types=1);
 
-session_start();
+require __DIR__ . '/bootstrap.php';
 
-If (isset($_SESSION['teachers_access'])) {
-  If (($_SESSION['teachers_access']) == 'nggyupn$g0lyoud)))') {
+use Atk4\Ui\Button;
+use Atk4\Ui\Grid;
+use Atk4\Ui\Table;
+use Scheduler\App;
+use Scheduler\Security;
 
-    $button_back = $app->add(['Button','Atgriezties mājaslapā','big primary','icon'=>'home'])
-    ->link(['index']);
-
-    $app->add(['ui'=>'divider']);
-
-    $teacher = new Model\Teacher($app->db);
-    $teacher->setOrder('surname');
-    $grid = $app->add('Grid');
-    $grid->setModel($teacher,['name','surname','class','cabinet','subject']);
-    $grid->addQuickSearch(['name']);
-    $grid->addDecorator('name', new \atk4\ui\TableColumn\Link('parentslist.php?id={$id}'));
-    } else {
-      header('Location: index.php');
-    }
-  } else {
-    header('Location: index.php');
-}
+Security::requireRole('teachers');
+$app = new App();
+Button::addTo($app, ['Atgriezties mājaslapā', 'icon' => 'home'])->link(['index']);
+Button::addTo($app, ['Iziet'])->link(['logout']);
+$grid = Grid::addTo($app);
+$grid->setModel(new Model\Teacher($app->db), ['name', 'surname', 'class', 'cabinet', 'subject']);
+$grid->addQuickSearch(['name', 'surname']);
+$grid->addDecorator('name', [Table\Column\Link::class, ['parentslist'], ['id' => 'id']]);

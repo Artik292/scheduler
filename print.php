@@ -1,69 +1,28 @@
 <?php
 
-require "vendor/autoload.php";
+declare(strict_types=1);
 
-$app = new App("print");
+require __DIR__ . '/bootstrap.php';
 
-session_start();
+use Atk4\Ui\Button;
+use Atk4\Ui\Header;
+use Atk4\Ui\Js\JsExpression;
+use Atk4\Ui\Table;
+use Scheduler\App;
+use Scheduler\Security;
 
-if (isset($_SESSION["teachers_access"])) {
-    if ($_SESSION["teachers_access"] == 'nggyupn$g0lyoud)))') {
-        $app->layout->template->del("Header");
-
-        $teacher = new Model\Teacher($app->db);
-        $teacher->load($app->stickyGet("id"));
-        $parents = $teacher->ref("Vecaki");
-        $parents->setOrder("time");
-
-        $header = $app->add([
-            "Header",
-            $teacher["name"] .
-            " " .
-            $teacher["surname"] .
-            " " .
-            $teacher["class"],
-        ]);
-
-        $table = $app->add(["Table"]);
-        $table->setModel($parents, [
-            "time",
-            "student_name",
-            "grade",
-            "parent_name",
-            "contact_phone",
-        ]);
-    } else {
-        header("Location: index.php");
-    }
-} else {
-    header("Location: index.php");
+Security::requireRole('teachers');
+$id = filter_var($_GET['id'] ?? null, FILTER_VALIDATE_INT, ['options' => ['min_range' => 1]]);
+if (!$id) {
+    http_response_code(404);
+    exit;
 }
-/*$header = array('Vecaka Uzvards', 'Skolena Uzvards', 'Kontaktnumurs', 'Laiks');
-
-$pdf = new FPDF();
-$pdf->AddPage();
-$pdf->SetFont('Arial','B',16);
-//$pdf->Cell(40,10,$teacher['name']);
-$pdf->Cell(40,10,'По русски');
-$pdf->Ln();
-$pdf->SetFont('Arial','B',12);
-foreach($header as $col)
-    $pdf->Cell(45,7,$col,1);
-$pdf->Ln();
-$pdf->SetFont('Arial','',10);
-foreach($parents as $col) {
-  $pdf->Cell(45,7,$parents['student_name'],1);
-  $pdf->Cell(45,7,$parents['parent_name'],1);
-  $pdf->Cell(45,7,$parents['contact_phone'],1);
-  $pdf->Cell(45,7,$parents['time'],1);
-  $pdf->Ln();
+$app = new App('print');
+$teacher = (new Model\Teacher($app->db))->tryLoad($id);
+if ($teacher === null) {
+    http_response_code(404);
+    return;
 }
-// Data
-/*foreach($parents as $row)
-{
-    //foreach($row as $col)
-        $pdf->Cell(40,6,$row,1);
-    $pdf->Ln();
-}
-
-$pdf->Output(); */
+Header::addTo($app, [$teacher->get('name') . ' ' . $teacher->get('surname') . ' ' . $teacher->get('class')]);
+Table::addTo($app)->setModel($teacher->ref('Vecaki'), ['time', 'student_name', 'grade', 'parent_name', 'contact_phone']);
+Button::addTo($app, ['Izdrukāt / PDF', 'class' => ['no-print']])->on('click', new JsExpression('window.print()'));

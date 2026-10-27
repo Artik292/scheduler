@@ -8,4 +8,16 @@ fpdf181/
 Agile Toolkit.app
 local.settings.php
 vecaku_diena.tar
-terraform/*terr*
+terraform/.terraform/
+terraform/*.tfstate*
+terraform/*.tfplan
+terraform/*.tfvars
+!terraform/*.tfvars.example
+
+/vendor/
+.env
+.env.*
+!.env.example
+gha-creds-*.json
+/var/
+/public/atk/

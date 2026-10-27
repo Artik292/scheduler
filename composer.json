@@ -1,17 +1,25 @@
 {
+    "name": "scheduler/vecaku-diena",
+    "description": "Parent and teacher appointment scheduling",
+    "type": "project",
+    "license": "proprietary",
+    "require": {
+        "php": "~8.3.0",
+        "ext-mbstring": "*",
+        "ext-pdo": "*",
+        "ext-pdo_mysql": "*",
+        "atk4/ui": "^6.0",
+        "symfony/http-foundation": "^6.4"
+    },
     "autoload": {
         "psr-4": {
-            "":"src/"
+            "Scheduler\\": "src/",
+            "Model\\": "src/Model/"
         }
     },
-  "require":{
-    "atk4/ui": "*",
-        "twilio/sdk": "^5.15",
-        "h4cc/wkhtmltopdf-i386": "*"
-  },
-  "config": {
-        "platform": {
-            "php": "5.6.40"
-        }
+    "config": {
+        "allow-plugins": false,
+        "platform": {"php": "8.3.36"},
+        "sort-packages": true
     }
 }

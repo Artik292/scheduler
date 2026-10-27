@@ -1,7 +1,123 @@
-docker run -d --name vecaku_diena -p 8080:80 -e pass=RZG1L0ve -e teachers_pass=Jurmala\<3 -e DATABASE_URL=mysql://root:rootpassword@35.228.250.24/testdb artik292/vecaku-diena:20241030_003
+# Vecāku diena
 
-docker exec vecaku_diena /usr/bin/mysqldump -u root --password=root DATABASE > backup.sql
+Приложение записи родителей к преподавателям. Интерфейс и существующие URL сохранены, код перенесён на API ATK 6.
 
-2024:
-8012 visitors
-471 records from 1020 available
+## Версии
+
+- PHP **8.3.36**, Apache, Debian Bookworm.
+- ATK UI/Data/Core **6.0.0** — последние стабильные выпуски ATK на момент обновления.
+- MySQL **8.4.13 LTS** для локального запуска; Cloud SQL **MySQL 8.4**.
+- Composer **2.10.3**, Terraform Google provider **8.8.1**, Random provider **3.9.1**.
+
+ATK UI/Data 6 официально требуют PHP `<8.4`: переход на PHP 8.4/8.5 требует отдельной миграции фреймворка. Транзитивные библиотеки ограничены совместимостью ATK; в частности, он использует Doctrine DBAL 3.6 и abandoned-пакет `doctrine/cache`. Проверка `composer audit` остаётся обязательной. Неиспользуемые Twilio, atk4/dsql и wkhtmltopdf удалены; печать и сохранение PDF доступны средствами браузера.
+
+## Локальный запуск
+
+Требуются Docker и Docker Compose. PHP и MySQL на компьютере устанавливать не нужно.
+
+Если `.env` ещё отсутствует, создайте его с отдельными случайными паролями:
+
+```bash
+python3 - <<'PYTHON'
+from pathlib import Path
+import secrets
+p = Path('.env')
+if p.exists():
+    raise SystemExit('.env already exists; preserve your credentials')
+p.write_text(''.join(name + '=' + secrets.token_hex(24) + '\n' for name in ['DB_PASSWORD', 'DB_ROOT_PASSWORD', 'ADMIN_PASSWORD', 'TEACHERS_PASSWORD']))
+p.chmod(0o600)
+PYTHON
+
+docker compose up -d --build --wait
+```
+
+Откройте http://localhost:8080. Административный вход — `/go.php`; вход преподавателей — `/teachers_access.php`. Пароли находятся в локальном `.env`, который исключён из Git и Docker-контекста. `APP_PORT` позволяет выбрать другой локальный порт.
+
+Сервис `migrate` создаёт схему и начальные тексты перед запуском приложения. При первом запуске список преподавателей пуст: добавьте группы и преподавателей в административном интерфейсе. Для отдельной демонстрационной базы:
+
+```bash
+docker compose exec -T app php bin/migrate.php --demo
+```
+
+`--demo` разрешён только с `APP_ENV=local`. Данные MySQL сохраняются в named volume. `docker compose down` останавливает окружение, сохраняя данные; `docker compose down --volumes` удаляет его локальную базу.
+
+## Проверки
+
+Запускайте проверки на отдельном Compose-проекте, чтобы не затрагивать рабочие данные. Пример после подготовки `.env`:
+
+```bash
+APP_PORT=18080 docker compose -p scheduler-test up -d --build --wait
+APP_PORT=18080 docker compose -p scheduler-test exec -T app php bin/migrate.php --demo
+APP_PORT=18080 docker compose -p scheduler-test exec -T app php < tests/integration.php
+COMPOSE_PROJECT_NAME=scheduler-test bash tests/migrations.sh
+TEST_BASE_URL=http://127.0.0.1:18080 python3 tests/http_smoke.py
+APP_PORT=18080 docker compose -p scheduler-test down --volumes
+```
+
+Проверки покрывают подключение ATK, связи моделей, UTF-8, занятые/недопустимые слоты, недоступного преподавателя, закрытые страницы, CSRF и недоступность служебных файлов через HTTP. В GitHub Actions они выполняются до публикации образа.
+
+Для Cloud Run собирайте `linux/amd64`:
+
+```bash
+docker build --platform linux/amd64 -t scheduler:cloud-check .
+```
+
+## Схема и обновление существующих данных
+
+Актуальная схема находится в `database/schema.sql`; последовательность обновлений — в `bin/migrate.php`. Миграции повторяемы и защищены блокировкой MySQL. Исторические дампы в `docs/` не используются при запуске и не попадают в образ.
+
+Перед миграцией существующей базы сделайте резервную копию и проверьте восстановление в отдельной БД. Скрипт добавляет недостающие поля, переводит таблицы на utf8mb4, исправляет ключ счётчика и вводит уникальность `(teacher_id, time)`. При наличии повторных или недопустимых временных слотов он останавливается, сохраняя записи для ручного исправления. MySQL DDL не является полностью транзакционным: повторный запуск продолжит незавершённую миграцию.
+
+```bash
+# В контейнере с конфигурацией нужной базы:
+php bin/migrate.php
+```
+
+Один набор записей соответствует одному мероприятию, как в исходном приложении. Поддержка нескольких дат потребует отдельного поля мероприятия и расширения уникального ключа.
+
+## Облако и Terraform
+
+Terraform теперь описывает приложение, Artifact Registry, приватное подключение Cloud SQL, Secret Manager, runtime/deploy service accounts, Workload Identity Federation и Cloud Run Job для миграций. Публичный phpMyAdmin убран. Существующие адреса основных Terraform-ресурсов сохранены.
+
+В HCP Terraform используйте корень репозитория как каталог загрузки и `terraform` как working directory: конфигурация читает `../database/schema.sql`. Нужна авторизация в организации/workspace, указанных в `terraform/main.tf`.
+
+Входные переменные описаны в `terraform/variables.tf`:
+
+- `project_id`, `region`, `github_repository` (`owner/repository`).
+- `app_image` — существующий образ из Artifact Registry, предпочтительно с digest.
+- `db_root_password`, `db_password`, `admin_password`, `teachers_password` — уникальные секреты; задавайте их как sensitive-переменные защищённого workspace. Пароль root должен отличаться от пароля приложения.
+
+Secret Manager получает версии из Terraform: значения остаются в Terraform state. Ограничьте доступ к workspace/state. Пароли не выводятся через outputs и не хранятся в коде.
+
+Для нового проекта сначала включите billing и создайте Artifact Registry из Terraform, затем загрузите первый образ и создайте остальные ресурсы с его URI. До первого обращения пользователей выполните Cloud Run Job `vecaku-diena-cloudrun-migrate`. Следующие релизы выполняют миграции автоматически перед переключением приложения.
+
+**Для существующего MySQL 5.6 не применяйте смену `database_version` вслепую.** Подготовьте отдельный MySQL 8.4, перенесите данные совместимым способом, проверьте миграции и переключение. Перед применением Terraform проверьте plan: изменены версия и размер БД, её пользователь, секреты, образ сервиса и настройки защиты удаления. Обновление провайдера с 6 до 8 также требует проверки plan. Автоматическое применение инфраструктуры в workflow не выполняется.
+
+Для runtime-пользователя БД после начальной настройки ограничьте SQL-права необходимой базой. Миграциям нужны DDL-права; для разделения прав создайте отдельного пользователя миграций. Пароли преподавателей остаются общими для группы, как в исходном приложении.
+
+## GitHub Actions
+
+`verify` запускается для PR и push в `main`/`v2` без облачных ключей. `deploy` — только для `main`, после успешных проверок и через environment `production`.
+
+Задайте repository/environment variables:
+
+- `GCP_PROJECT_ID`
+- `GCP_REGION` — необязательно, по умолчанию `europe-north1`
+- `GCP_WORKLOAD_IDENTITY_PROVIDER` — output `workload_identity_provider`
+- `GCP_DEPLOY_SERVICE_ACCOUNT` — output `deploy_service_account`
+
+Настройте защиту environment `production`. Старый JSON-ключ `GOOGLE_APPLICATION_CREDENTIALS` больше не используется. Образы получают тег commit SHA; CI обновляет image миграционного Job, выполняет его и разворачивает приложение. Terraform оставляет обновление этих image за CI через `ignore_changes`.
+
+## Безопасность и эксплуатация
+
+- Публичен только `public/`; код, дампы, Git и Terraform недоступны по HTTP.
+- Закрытые страницы проверяют роль до инициализации UI. Преподаватели видят общую таблицу записей, как раньше.
+- AJAX callbacks и POST требуют CSRF-токен. Выход очищает обе роли и выполняется через POST.
+- Сессии хранятся в MySQL и переживают замену экземпляра Cloud Run.
+- Cookie `Secure` включён при `APP_ENV=production`; `local` используйте только локально.
+- Ошибки production скрыты от пользователей, логи направляются в stdout/stderr.
+- Лимит записей действует отдельно для сессии. Ограничение неудачных попыток входа использует адрес непосредственного клиента (`REMOTE_ADDR`) и сбрасывается после успешного входа; при общем reverse proxy лимит может быть общим для его пользователей. Перед production подберите политику доверенных proxy под свою схему входящего трафика.
+- Для Cloud SQL включены backups/PITR и защита удаления. Настройте оповещения об ошибках/расходах и регулярно проверяйте восстановление.
+- Не публикуйте реальные SQL-дампы и действующие секреты. Старые ключи, которые могли попасть в прежние образы, следует отозвать.
+
+`vendor/` добавлен в `.gitignore`, но в исходном репозитории его файлы уже отслеживаются. После самостоятельной проверки изменений решите, когда убрать их из Git index: зависимости воспроизводимо устанавливаются из `composer.lock` при сборке. Скрипты проекта не выполняют git add/commit/push.

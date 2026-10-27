@@ -1,27 +1,24 @@
 <?php
+
+declare(strict_types=1);
+
 namespace Model;
 
-class Teacher extends \atk4\data\Model {
+class Teacher extends \Atk4\Data\Model
+{
     public $table = 'teacher';
-    public $title = 'Skolotājs';
-    public $name = 'Skolotājs';
+    public $caption = 'Skolotājs';
 
-    function init() {
+    protected function init(): void
+    {
         parent::init();
-
-        $this->addField('name',['caption'=>'Vārds','required'=>TRUE]);
-        $this->addField('surname',['caption'=>'Uzvārds','required'=>TRUE]);
-        $this->addField('class', ['caption'=>"Audzināmā klase"]); # Классный руководитель
-        $this->addField('cabinet',['caption'=>'Kabinets','required'=>TRUE]);
-        $this->addField('available',['caption'=>'Būs','type'=>'boolean','required'=>TRUE]);
-
-        $this->hasOne('subject_id', [new Subject(),'caption'=>'Grupa'])
-            ->addTitle();
-
-        $this->getElement('subject_id')->ui['visible'] = false;
-
-        $this->hasMany('Vecaki', new Vecaki);
-        $this->setOrder('name');
-
+        $this->addField('name', ['caption' => 'Vārds', 'required' => true]);
+        $this->addField('surname', ['caption' => 'Uzvārds', 'required' => true]);
+        $this->addField('class', ['caption' => 'Audzināmā klase']);
+        $this->addField('cabinet', ['caption' => 'Kabinets', 'required' => true]);
+        $this->addField('available', ['caption' => 'Būs', 'type' => 'boolean', 'default' => true]);
+        $this->hasOne('subject_id', ['model' => [Subject::class], 'caption' => 'Grupa'])->addTitle();
+        $this->hasMany('Vecaki', ['model' => [Vecaki::class]]);
+        $this->setOrder('surname');
     }
 }

@@ -1,22 +1,13 @@
 <?php
 
-require 'vendor/autoload.php';
+declare(strict_types=1);
 
-$app = new App('public');
-$app->always_run = false;
-
-$teacher=new Model\Teacher($app->db);
-$teacher->load($app->stickyGet('id'));
-
-//$t = new \atk4\core\DebugTrait;
-$file_name = '"'.$teacher['name'].'.pdf"';
-//$name = '"'.$teacher['name'].'.pdf"';
-//header('Location: "/tmp/Alla Cavicka.pdf"');
-//echo $file_name;
-header('Location: '.$file_name);
-//header("Content-type: application/pdf");
-//header("Content-Disposition: inline; filename = ".basename($file_name));
-//@readfile($file_name);
-//$t->exec('open '.'"'.$file_name.'"');
-//$t->exec('file_get_contents '.'"'.$file_name.'"');
-//header('Location: index.php');
+require __DIR__ . '/bootstrap.php';
+\Scheduler\Security::requireRole('teachers');
+$id = filter_var($_GET['id'] ?? null, FILTER_VALIDATE_INT, ['options' => ['min_range' => 1]]);
+if (!$id) {
+    http_response_code(404);
+    exit;
+}
+header('Location: print.php?id=' . $id, true, 302);
+exit;

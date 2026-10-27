@@ -1,0 +1,51 @@
+name: scheduler
+
+x-app-environment: &app-environment
+  APP_ENV: local
+  DB_HOST: db
+  DB_PORT: 3306
+  DB_NAME: scheduler
+  DB_USER: scheduler
+  DB_PASSWORD: ${DB_PASSWORD:?Set DB_PASSWORD in .env}
+  ADMIN_PASSWORD: ${ADMIN_PASSWORD:?Set ADMIN_PASSWORD in .env}
+  TEACHERS_PASSWORD: ${TEACHERS_PASSWORD:?Set TEACHERS_PASSWORD in .env}
+
+services:
+  db:
+    image: mysql:8.4.13
+    environment:
+      MYSQL_DATABASE: scheduler
+      MYSQL_USER: scheduler
+      MYSQL_PASSWORD: ${DB_PASSWORD:?Set DB_PASSWORD in .env}
+      MYSQL_ROOT_PASSWORD: ${DB_ROOT_PASSWORD:?Set DB_ROOT_PASSWORD in .env}
+    volumes:
+      - mysql-data:/var/lib/mysql
+    healthcheck:
+      test: [CMD-SHELL, 'MYSQL_PWD="$$MYSQL_PASSWORD" mysql -h 127.0.0.1 -u "$$MYSQL_USER" -D "$$MYSQL_DATABASE" -e "SELECT 1"']
+      interval: 5s
+      timeout: 5s
+      retries: 30
+      start_period: 20s
+  migrate:
+    image: scheduler:local
+    environment: *app-environment
+    command: [php, bin/migrate.php]
+    depends_on:
+      db:
+        condition: service_healthy
+  app:
+    image: scheduler:local
+    build: .
+    environment: *app-environment
+    ports:
+      - "127.0.0.1:${APP_PORT:-8080}:8080"
+    depends_on:
+      migrate:
+        condition: service_completed_successfully
+    healthcheck:
+      test: [CMD, php, -r, "exit(@file_get_contents('http://127.0.0.1:8080/healthz.php') === 'ok' ? 0 : 1);"]
+      interval: 10s
+      timeout: 3s
+      retries: 10
+volumes:
+  mysql-data:

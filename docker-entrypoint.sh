@@ -1,18 +1,13 @@
-#!/bin/bash
+#!/bin/sh
+set -eu
 
-# # Стартуем MariaDB
-# service mysql start
-#
-# # Настраиваем root пользователя и создаем базу данных
-# mysqladmin -u root password "$MYSQL_ROOT_PASSWORD"
-# mysql -u root -p"$MYSQL_ROOT_PASSWORD" mysql -e "UPDATE user SET plugin='mysql_native_password' WHERE User='root';"
-# mysql -u root -p"$MYSQL_ROOT_PASSWORD" -e "FLUSH PRIVILEGES;"
-# mysql -u root -p"$MYSQL_ROOT_PASSWORD" -e "CREATE DATABASE IF NOT EXISTS $MYSQL_DATABASE;"
-#
-# # Выполняем SQL скрипт, если он существует
-# if [ -f /var/www/html/docs/scheduler.sql ]; then
-#     cat /var/www/html/docs/scheduler.sql | mysql -u root -p"$MYSQL_ROOT_PASSWORD" $MYSQL_DATABASE
-# fi
-sed -i -e 's/variables_order = "GPCS"/variables_order = "EGPCS"/g' /etc/php/5.6/apache2/php.ini
-# Запускаем Apache в foreground
-apache2ctl -D FOREGROUND
+case "${PORT:-8080}" in
+    ''|*[!0-9]*) echo 'PORT must be numeric' >&2; exit 1 ;;
+esac
+if [ "${PORT:-8080}" -lt 1 ] || [ "${PORT:-8080}" -gt 65535 ]; then
+    echo 'PORT must be between 1 and 65535' >&2
+    exit 1
+fi
+sed -i "s/^Listen .*/Listen ${PORT:-8080}/" /etc/apache2/ports.conf
+sed -i "s/<VirtualHost \*:[0-9]*>/<VirtualHost *:${PORT:-8080}>/" /etc/apache2/sites-available/000-default.conf
+exec docker-php-entrypoint "$@"

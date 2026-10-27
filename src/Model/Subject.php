@@ -1,16 +1,19 @@
 <?php
+
+declare(strict_types=1);
+
 namespace Model;
 
-class Subject extends \atk4\data\Model {
+class Subject extends \Atk4\Data\Model
+{
     public $table = 'subject';
-    public $title = 'Stunda';
+    public $caption = 'Stunda';
 
-    function init() {
+    protected function init(): void
+    {
         parent::init();
-
-        $this->addField('name',['caption'=>'Grupa','required'=>TRUE]);
-
-        $this->hasMany('Teacher', new Teacher);
+        $this->addField('name', ['caption' => 'Grupa', 'required' => true]);
+        $this->hasMany('Teacher', ['model' => [Teacher::class]]);
         $this->setOrder('name');
     }
 }

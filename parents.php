@@ -1,145 +1,95 @@
 <?php
 
-require 'vendor/autoload.php';
-$app = new App('public');
+declare(strict_types=1);
 
-$back = $app->add(['Button','Atgriezties mājaslapā','green','icon'=>'reply'])
-->link(['index']);
+require __DIR__ . '/bootstrap.php';
 
-$app->add(['ui'=>'hidden divider']);
+use Atk4\Ui\Button;
+use Atk4\Ui\Columns;
+use Atk4\Ui\Form;
+use Atk4\Ui\Js\JsModal;
+use Atk4\Ui\Menu;
+use Atk4\Ui\Message;
+use Atk4\Ui\Table;
+use Atk4\Ui\VirtualPage;
+use Scheduler\App;
+use Scheduler\Booking;
+use Scheduler\Security;
 
-$text = new Model\Text($app->db);
-$text->tryLoadBy('code', 'parents_page_instruction_text');
-
-$col = $app->add('Columns');
-$col->addClass('stackable');
-$subject= new Model\Subject($app->db);
-$c1 = $col->addColumn();
-$c2 = $col->addColumn();
-$c3 = $col->addColumn();
-$c4 = $col->addColumn();
-$mes = $c4->add(['Message','Lietošanas instrukcija','massive info']);
-$mes->text->addParagraph($text['text']);
-
-$table_s = $c1->add(['Table','very basic selectable'])->addStyle('cursor', 'pointer');
-$table_s->setModel($subject, [$subject->title_field]);
-$table_s->on('click', 'tr', $c2->jsReload(['pr'=>$table_s->jsRow()->data('id')]));
-$pr = $app->stickyGet('pr');
-if ($pr) {
-  $subject->load($pr);
-  $teacher = $subject->ref('Teacher');
-  $teacher->setOrder('name');
-  $table_t = $c2->add(['Table','very basic selectable'])->addStyle('cursor', 'pointer');
-  $table_t->setModel($teacher,['name','surname','class']);
-  $table_t->on('click', 'tr', $c3->jsReload(['t'=>$table_t->jsRow()->data('id')]));
+$app = new App();
+Button::addTo($app, ['Atgriezties mājaslapā', 'icon' => 'reply'])->link(['index']);
+if (isset($_GET['saved'])) {
+    Message::addTo($app, ['Jūsu pieprasījums ir iesniegts!', 'type' => 'success']);
 }
-$t = $app->stickyGet('t');
-if($t) {
-  $teacher= new Model\Teacher($app->db);
-  $teacher = $teacher->load($t);
-  If ($teacher['available']) {
-    $parents=$teacher->ref('Vecaki');
-    $teacher_id = $teacher->id;
-    $parentss = new Model\Vecaki($app->db);
+$columns = Columns::addTo($app);
+$columns->addClass('stackable');
+$c1 = $columns->addColumn();
+$c2 = $columns->addColumn();
+$c3 = $columns->addColumn();
+$c4 = $columns->addColumn();
+Message::addTo($c4, ['Lietošanas instrukcija', 'type' => 'info'])->text->addParagraph($app->text('parents_page_instruction_text'));
 
-    $menu = $c3->add('Menu');
-    $menu->addClass('vertical fluid');
-    $menu->addHeader('Laiki ('.$teacher['name'].' '.$teacher['surname'].' '.$teacher['class'].')');
-
-    $vir = $app->add('VirtualPage');
-    $vir->set(function($vir) use($parentss,$app,$teacher_id,$t) {
-      $form = $vir->add('Form');
-      $form->buttonSave->set('Sūtīt');
-      $form->setModel($parentss,['student_name','grade','parent_name','contact_phone']);
-      $parentss['time'] = $app->stickyGet('time');
-      $parentss['teacher_id'] = $teacher_id;
-      $form->onSubmit(function($form) use($app,$t) {
-        $teacherr= new Model\Teacher($app->db);
-        $teacherr = $teacherr->load($t);
-        $parentsss=$teacherr->ref('Vecaki');
-        $check = $parentsss->tryLoadBy('time',$app->stickyGet('time'));
-        if($check->loaded()) {
-          return $app->jsRedirect(['error']);
-        } else {
-          $form->model->save();
-          return [$form->success('Jūsu pieprasījums ir iesniegts!') , $app->jsRedirect(['parents'])];
-
-        }
-      /*  if($parents->tryLoadAny()->loaded()==TRUE) {
-          foreach($parents as $rowss) {
-            if ($rowss['time']==$parents['time']) {
-              $array=[$s=>$parents['time']];
-              $s=$s+1;
-            }
-          }
-          unset($rowss);
-          $check=FALSE;
-          for($n=0;$n<=$s;$n++){
-            if (isset($array[$n]) && $array[$n]==$parents['time']) {
-              return [$form->error('Diemžēl, laiks jau ir aizņemts!') , new \atk4\ui\jsExpression('document.location="parents.php"')];
-              $check=TRUE;
-              break;
-            }
-          }
-          if($check==FALSE){
-            $form->model->save();
-            return [$form->success('Jūsu pieprasījums ir iesniegts!') , new \atk4\ui\jsExpression('document.location="parents.php"')];
-          }
-          }else {
-            $form->model->save();
-            return [$form->success('Jūsu pieprasījums ir iesniegts!') , new \atk4\ui\jsExpression('document.location="parents.php"')];
-          } */
-  //      $form->model->save();
-    //    return [$form->success('Jūsu pieprasījums ir iesniegts!') , new \atk4\ui\jsExpression('document.location="parents.php"')];
-      });
-    });
-
-    $min=0;
-    for ($hour=17;$hour<=18;$hour++) {
-      for ($i=1;$i<=6;$i++) {
-        if ($min>=60) {
-          $min=0;
-        }
-        if($min<10) {
-          $time = $hour.':0'.$min;
-        }else {
-          $time = $hour.':'.$min;
-        }
-        $s=1;
-        if($parents->tryLoadAny()->loaded()) {
-          foreach($parents as $rowss) {
-            if ($rowss['time']==$time) {
-              $array=[$s=>$time];
-              $s=$s+1;
-            }
-          }
-          unset($rowss);
-          $check=FALSE;
-          for($n=0;$n<=$s;$n++){
-            if (isset($array[$n]) && $array[$n]==$time) {
-              $menu->addItem([$time,'disabled']);
-              $check=TRUE;
-            }
-          }
-          if($check==FALSE){
-            $menu->addItem($time)->on('click', new \atk4\ui\jsModal('Ieraksts',$vir,['time'=>$time]));
-          }
-          }else {
-            $menu->addItem($time)->on('click', new \atk4\ui\jsModal('Ieraksts',$vir,['time'=>$time]));
-          }
-        $min=$min+10;
-      }
+$subjects = new Model\Subject($app->db);
+$table = Table::addTo($c1);
+$table->setModel($subjects, ['name']);
+$table->addDecorator('name', [Table\Column\Link::class, ['parents'], ['pr' => 'id']]);
+$app->stickyGet('pr');
+$app->stickyGet('t');
+$subjectId = filter_var($_GET['pr'] ?? null, FILTER_VALIDATE_INT, ['options' => ['min_range' => 1]]);
+$teacherId = filter_var($_GET['t'] ?? null, FILTER_VALIDATE_INT, ['options' => ['min_range' => 1]]);
+if ($subjectId) {
+    $teachers = new Model\Teacher($app->db);
+    $teachers->addCondition('subject_id', $subjectId);
+    $table = Table::addTo($c2);
+    $table->setModel($teachers, ['name', 'surname', 'class']);
+    $table->addDecorator('name', [Table\Column\Link::class, ['parents', 'pr' => $subjectId], ['t' => 'id']]);
+}
+if (!$teacherId) {
+    return;
+}
+$teacher = (new Model\Teacher($app->db))->tryLoad($teacherId);
+if ($teacher === null) {
+    http_response_code(404);
+    return;
+}
+if (!$teacher->get('available')) {
+    Message::addTo($c3, ['Skolotājs nav pieejams.', 'type' => 'warning']);
+    return;
+}
+$menu = Menu::addTo($c3, ['class' => ['vertical fluid']]);
+$menu->addHeader('Laiki (' . $teacher->get('name') . ' ' . $teacher->get('surname') . ')');
+$booked = array_column($teacher->ref('Vecaki')->export(['time']), 'time');
+$page = VirtualPage::addTo($app);
+$page->set(static function (VirtualPage $page) use ($app, $teacherId) {
+    $time = $app->stickyGet('time');
+    if (!is_string($time) || !in_array($time, Booking::slots(), true)) {
+        Message::addTo($page, ['Nederīgs pieraksta laiks.', 'type' => 'error']);
+        return;
     }
-  } else {
-    $menu = $c3->add('Menu');
-    $menu->addClass('vertical fluid');
-    $menu->addHeader('Ceturtdien, vecāku dienas laikā, šīs skolotājas nebūs.');
-    //$menu->addItem('Šo skolotaja nebus.');
-  }
+    $form = Form::addTo($page);
+    $form->buttonSave->set('Sūtīt');
+    $entity = (new Model\Vecaki($app->db))->createEntity();
+    $entity->set('teacher_id', $teacherId);
+    $entity->set('time', $time);
+    $form->setEntity($entity, ['student_name', 'grade', 'parent_name', 'contact_phone']);
+    $form->onSubmit(static function (Form $form) use ($app, $teacherId, $time) {
+        if (!Security::throttle('booking-' . session_id(), 100, 3600)) {
+            return $form->jsError('contact_phone', 'Pārāk daudz pieprasījumu. Lūdzu, mēģiniet vēlāk.');
+        }
+        try {
+            Booking::create($teacherId, $time, $form->entity->get());
+        } catch (\DomainException | \InvalidArgumentException $error) {
+            return $form->jsError('student_name', $error->getMessage());
+        }
+
+        return $app->jsRedirect(['parents', 'saved' => '1']);
+    });
+});
+foreach (Booking::slots() as $time) {
+    $item = $menu->addItem($time);
+    if (in_array($time, $booked, true)) {
+        $item->addClass('disabled');
+    } else {
+        $item->on('click', new JsModal('Ieraksts', $page, ['time' => $time]));
+    }
 }
-
-
-// $app->add(['ui'=>'divider']);
-//
-// $app->add(['Label','This app is made by Colibri School students','red right ribbon'])
-// ->link('http://colibrischool.lv');
