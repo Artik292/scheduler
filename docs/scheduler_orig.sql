@@ -6,6 +6,9 @@
 -- Время создания: Мар 03 2018 г., 14:52
 -- Версия сервера: 10.1.21-MariaDB
 -- Версия PHP: 5.6.30
+--
+-- Структура адаптирована для MySQL 8.4 и текущего приложения.
+-- Импортировать в пустую базу, затем выполнить php bin/migrate.php.
 
 SET SQL_MODE = "NO_AUTO_VALUE_ON_ZERO";
 SET AUTOCOMMIT = 0;
@@ -29,9 +32,9 @@ SET time_zone = "+00:00";
 --
 
 CREATE TABLE IF NOT EXISTS `subject` (
-  `id` int(11) UNSIGNED NOT NULL,
-  `name` varchar(255) DEFAULT NULL
-) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+  `id` int UNSIGNED NOT NULL,
+  `name` varchar(255) NOT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 --
 -- Дамп данных таблицы `subject`
@@ -52,12 +55,16 @@ INSERT INTO `subject` (`id`, `name`) VALUES
 --
 
 CREATE TABLE IF NOT EXISTS `teacher` (
-  `id` int(11) UNSIGNED NOT NULL,
-  `name` varchar(255) DEFAULT NULL,
-  `cabinet` varchar(50) DEFAULT NULL,
-  `subject_id` int(11) UNSIGNED NOT NULL,
-  `available` bool DEFAULT TRUE
-) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+  `id` int UNSIGNED NOT NULL,
+  `name` varchar(255) NOT NULL,
+  `surname` varchar(255) NOT NULL DEFAULT '',
+  `class` varchar(150) DEFAULT NULL,
+  `cabinet` varchar(50) NOT NULL,
+  `subject_id` int UNSIGNED NOT NULL,
+  `available` tinyint(1) NOT NULL DEFAULT 1,
+  `start_time` varchar(5) NOT NULL DEFAULT '17:00',
+  `end_time` varchar(5) NOT NULL DEFAULT '19:00'
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 --
 -- Дамп данных таблицы `teacher`
@@ -98,9 +105,9 @@ INSERT INTO `teacher` (`id`, `name`, `cabinet`, `subject_id`) VALUES
 --
 
 CREATE TABLE IF NOT EXISTS `counter` (
-  `id` int(11) UNSIGNED NOT NULL,
-  `counter` int(11) DEFAULT 0
-) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+  `id` int UNSIGNED NOT NULL PRIMARY KEY,
+  `counter` bigint NOT NULL DEFAULT 0
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 --
 -- Дамп данных таблицы `counter`
@@ -112,20 +119,20 @@ INSERT INTO `counter` (`id`, `counter`) VALUES
 -- --------------------------------------------------------
 
 --
--- Структура таблицы `texts`
+-- Структура таблицы `text`
 --
 
-CREATE TABLE IF NOT EXISTS `texts` (
-  `id` int(11) UNSIGNED NOT NULL,
-  `code` varchar(255) DEFAULT NULL,
-  `text` varchar(255) DEFAULT NULL
-) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+CREATE TABLE IF NOT EXISTS `text` (
+  `id` int NOT NULL AUTO_INCREMENT PRIMARY KEY,
+  `code` varchar(255) NOT NULL,
+  `text` text NOT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 --
--- Дамп данных таблицы `texts`
+-- Дамп данных таблицы `text`
 --
 
--- INSERT INTO `texts` (`id`, `code`, `text`) VALUES
+-- INSERT INTO `text` (`id`, `code`, `text`) VALUES
 -- (1, 'main_page_middle_text', 'Cienījamie vecāki! Lūdzam ievērot reglamentu: no 17.00 līdz 19.00.'),
 -- (2, 'main_page_sub_text', '2018.gada 22.martā plkst. 17.00 - 19.00.'),
 -- (3, 'parents_header', 'Lietošanas instrukcija'),
@@ -140,15 +147,15 @@ CREATE TABLE IF NOT EXISTS `texts` (
 --
 
 CREATE TABLE IF NOT EXISTS `vecaki` (
-  `id` int(11) NOT NULL,
-  `student_name` varchar(255) DEFAULT NULL,
-  `grade` varchar(255) DEFAULT NULL,
-  `parent_name` varchar(255) DEFAULT NULL,
-  `contact_phone` varchar(255) DEFAULT NULL,
-  `time` varchar(20) DEFAULT NULL,
+  `id` int NOT NULL,
+  `student_name` varchar(255) NOT NULL,
+  `grade` varchar(255) NOT NULL,
+  `parent_name` varchar(255) NOT NULL,
+  `contact_phone` varchar(255) NOT NULL,
+  `time` varchar(5) NOT NULL,
   `is_avaliable` tinyint(1) DEFAULT NULL,
-  `teacher_id` int(11) UNSIGNED NOT NULL
-) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+  `teacher_id` int UNSIGNED NOT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 --
 -- Индексы сохранённых таблиц
@@ -172,6 +179,7 @@ ALTER TABLE `teacher`
 --
 ALTER TABLE `vecaki`
   ADD PRIMARY KEY (`id`),
+  ADD CONSTRAINT `unique_teacher_time` UNIQUE (`teacher_id`, `time`),
   ADD KEY `fk_vecaki_teacher1_idx` (`teacher_id`);
 
 --
@@ -182,17 +190,17 @@ ALTER TABLE `vecaki`
 -- AUTO_INCREMENT для таблицы `subject`
 --
 ALTER TABLE `subject`
-  MODIFY `id` int(11) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=168;
+  MODIFY `id` int UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=168;
 --
 -- AUTO_INCREMENT для таблицы `teacher`
 --
 ALTER TABLE `teacher`
-  MODIFY `id` int(11) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=248;
+  MODIFY `id` int UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=248;
 --
 -- AUTO_INCREMENT для таблицы `vecaki`
 --
 ALTER TABLE `vecaki`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
+  MODIFY `id` int NOT NULL AUTO_INCREMENT;
 --
 -- Ограничения внешнего ключа сохраненных таблиц
 --

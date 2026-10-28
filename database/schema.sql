@@ -16,6 +16,8 @@ CREATE TABLE IF NOT EXISTS teacher (
     cabinet VARCHAR(50) NOT NULL,
     subject_id INT UNSIGNED NOT NULL,
     available TINYINT(1) NOT NULL DEFAULT 1,
+    start_time VARCHAR(5) NOT NULL DEFAULT '17:00',
+    end_time VARCHAR(5) NOT NULL DEFAULT '19:00',
     CONSTRAINT fk_teacher_subject FOREIGN KEY (subject_id) REFERENCES subject(id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 

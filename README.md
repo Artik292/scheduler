@@ -50,11 +50,13 @@ APP_PORT=18080 docker compose -p scheduler-test up -d --build --wait
 APP_PORT=18080 docker compose -p scheduler-test exec -T app php bin/migrate.php --demo
 APP_PORT=18080 docker compose -p scheduler-test exec -T app php < tests/integration.php
 COMPOSE_PROJECT_NAME=scheduler-test bash tests/migrations.sh
+APP_PORT=18080 docker compose -p scheduler-test exec -T app php < tests/reception_hours.php
+APP_PORT=18080 docker compose -p scheduler-test exec -T app php < tests/unavailable_teacher.php
 TEST_BASE_URL=http://127.0.0.1:18080 python3 tests/http_smoke.py
 APP_PORT=18080 docker compose -p scheduler-test down --volumes
 ```
 
-Проверки покрывают подключение ATK, связи моделей, UTF-8, занятые/недопустимые слоты, недоступного преподавателя, закрытые страницы, CSRF и недоступность служебных файлов через HTTP. В GitHub Actions они выполняются до публикации образа.
+Проверки покрывают подключение ATK, связи моделей, UTF-8, занятые/недопустимые слоты, индивидуальные часы приёма, сохранение записей при изменении часов, редактируемое сообщение об отсутствии преподавателя, закрытые страницы, CSRF и недоступность служебных файлов через HTTP. В GitHub Actions они выполняются до публикации образа.
 
 Для Cloud Run собирайте `linux/amd64`:
 
@@ -75,11 +77,31 @@ php bin/migrate.php
 
 Один набор записей соответствует одному мероприятию, как в исходном приложении. Поддержка нескольких дат потребует отдельного поля мероприятия и расширения уникального ключа.
 
+## Индивидуальное время приёма
+
+В административном разделе **Skolotāji** для каждого преподавателя задаются **Pieņemšana no** (начало) и **Pieņemšana līdz** (окончание). По умолчанию остаётся 17:00–19:00. Время выбирается с шагом 10 минут в пределах одного дня; для окончания допустимо 24:00. Например, диапазон 16:30–18:00 даёт девять приёмов с 16:30 до 17:50: последний приём заканчивается в 18:00.
+
+Родителям показываются часы выбранного преподавателя. Бронирование повторно проверяет актуальное расписание на сервере. Изменение диапазона, которое оставит существующую запись за его пределами, отклоняется; сначала нужно перенести запись на доступное время. Если новое время ещё не входит в расписание, сначала расширьте диапазон, перенесите запись, затем сократите диапазон. Эти проверки также действуют при создании и редактировании записей администратором.
+
+Миграция `004_teacher_reception_hours` добавляет поля существующим преподавателям с прежними значениями 17:00–19:00. Перед выпуском обновлённого приложения выполните `php bin/migrate.php`: локальный Compose и workflow GitHub уже запускают миграции перед приложением. Повторный импорт SQL-дампа для обновления работающей базы не требуется.
+
+## Сообщение об отсутствии преподавателя
+
+Если в разделе **Skolotāji** выключить **Būs**, преподаватель остаётся в списке родителей. При его выборе вместо времени отображается сообщение:
+
+> Pedagoga nebūs. Lūdzam sazināties individuāli e-klasē un sarunāt citu laiku. Paldies!
+
+Сообщение хранится в модели `Text`, в записи с кодом `teacher_unavailable_message`. Изменить его можно в административном разделе **Virsraksti** (`/admin.php?check=text`) так же, как остальные тексты сайта. Изменение вступает в силу при следующем открытии страницы. Текст отображается как обычный текст с экранированием HTML.
+
+Миграция `005_teacher_unavailable_message` добавляет начальное сообщение, сохраняя существующее значение при повторном запуске. Уже сделанные записи к преподавателю сохраняются; новые записи к недоступному преподавателю отклоняются сервером.
+
 ## Облако и Terraform
+
+Пошаговая инструкция для текущего проекта `vecaku-diena-2026`: [импорт исходных данных и первый запуск](docs/GCP-DEPLOYMENT.md).
 
 Terraform теперь описывает приложение, Artifact Registry, приватное подключение Cloud SQL, Secret Manager, runtime/deploy service accounts, Workload Identity Federation и Cloud Run Job для миграций. Публичный phpMyAdmin убран. Существующие адреса основных Terraform-ресурсов сохранены.
 
-В HCP Terraform используйте корень репозитория как каталог загрузки и `terraform` как working directory: конфигурация читает `../database/schema.sql`. Нужна авторизация в организации/workspace, указанных в `terraform/main.tf`.
+Terraform можно запускать локально с Google Application Default Credentials (`gcloud auth application-default login`). При использовании HCP Terraform используйте корень репозитория как каталог загрузки и `terraform` как working directory: конфигурация читает `../database/schema.sql`. Для HCP нужна авторизация в соответствующей организации/workspace.
 
 Входные переменные описаны в `terraform/variables.tf`:
 
@@ -97,7 +119,9 @@ Secret Manager получает версии из Terraform: значения о
 
 ## GitHub Actions
 
-`verify` запускается для PR и push в `main`/`v2` без облачных ключей. `deploy` — только для `main`, после успешных проверок и через environment `production`.
+`verify` запускается для PR и push в `main`/`v2`/`v3` без облачных ключей. `deploy` — только для `main`, после успешных проверок и через environment `production`. После развёртывания pipeline проверяет `/healthz.php`.
+
+Пошаговый выпуск текущих изменений: [релиз через GitHub Actions](docs/RELEASE.md).
 
 Задайте repository/environment variables:
 

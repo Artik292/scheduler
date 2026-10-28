@@ -1,11 +1,11 @@
 terraform {
   required_version = ">= 1.15.0, < 2.0.0"
-  cloud {
-    organization = "artik292"
-    workspaces {
-      name = "vecaku-diena"
-    }
-  }
+#  cloud {
+#    organization = "artik292"
+#    workspaces {
+#      name = "vecaku-diena-2026"
+#    }
+#  }
   required_providers {
     google = {
       source  = "hashicorp/google"
@@ -19,13 +19,15 @@ terraform {
 }
 
 provider "google" {
-  project = var.project_id
-  region  = var.region
+  project               = var.project_id
+  region                = var.region
+  user_project_override = true
+  billing_project       = var.project_id
 }
 
 locals {
   service_name = "vecaku-diena-cloudrun"
-  db_name      = "vecaku-diena-db"
+  db_name      = "vecaku-diena"
   environment = {
     APP_ENV = "production"
     DB_HOST = google_sql_database_instance.instance.private_ip_address
@@ -43,6 +45,7 @@ locals {
 resource "google_project_service" "apis" {
   for_each = toset([
     "run.googleapis.com", "compute.googleapis.com", "sqladmin.googleapis.com",
+    "cloudresourcemanager.googleapis.com", "serviceusage.googleapis.com",
     "servicenetworking.googleapis.com", "artifactregistry.googleapis.com",
     "secretmanager.googleapis.com", "iam.googleapis.com", "iamcredentials.googleapis.com",
     "sts.googleapis.com", "storage.googleapis.com"
@@ -277,7 +280,7 @@ resource "google_service_account" "deploy" {
   depends_on = [google_project_service.apis]
 }
 resource "google_iam_workload_identity_pool" "github" {
-  workload_identity_pool_id = "scheduler-github"
+  workload_identity_pool_id = "scheduler-github-2026"
   depends_on                = [google_project_service.apis]
 }
 resource "google_iam_workload_identity_pool_provider" "github" {

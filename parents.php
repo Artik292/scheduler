@@ -53,16 +53,17 @@ if ($teacher === null) {
     return;
 }
 if (!$teacher->get('available')) {
-    Message::addTo($c3, ['Skolotājs nav pieejams.', 'type' => 'warning']);
+    Message::addTo($c3, ['type' => 'warning'])->text->addParagraph($app->text(Model\Text::TEACHER_UNAVAILABLE_MESSAGE));
     return;
 }
+$slots = $teacher->getBookingSlots();
 $menu = Menu::addTo($c3, ['class' => ['vertical fluid']]);
 $menu->addHeader('Laiki (' . $teacher->get('name') . ' ' . $teacher->get('surname') . ')');
 $booked = array_column($teacher->ref('Vecaki')->export(['time']), 'time');
 $page = VirtualPage::addTo($app);
-$page->set(static function (VirtualPage $page) use ($app, $teacherId) {
+$page->set(static function (VirtualPage $page) use ($app, $teacherId, $slots) {
     $time = $app->stickyGet('time');
-    if (!is_string($time) || !in_array($time, Booking::slots(), true)) {
+    if (!is_string($time) || !in_array($time, $slots, true)) {
         Message::addTo($page, ['Nederīgs pieraksta laiks.', 'type' => 'error']);
         return;
     }
@@ -85,7 +86,7 @@ $page->set(static function (VirtualPage $page) use ($app, $teacherId) {
         return $app->jsRedirect(['parents', 'saved' => '1']);
     });
 });
-foreach (Booking::slots() as $time) {
+foreach ($slots as $time) {
     $item = $menu->addItem($time);
     if (in_array($time, $booked, true)) {
         $item->addClass('disabled');

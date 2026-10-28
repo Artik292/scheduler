@@ -2,9 +2,9 @@ name: Build, verify and deploy
 
 on:
   push:
-    branches: [main, v2]
+    branches: [main, v2, v3]
   pull_request:
-    branches: [main, v2]
+    branches: [main, v2, v3]
   workflow_dispatch:
 
 permissions:
@@ -41,6 +41,8 @@ jobs:
         run: |
           docker compose exec -T app sh -c 'find /app/src /app/public /app/bin -name "*.php" -exec php -l {} \;'
           docker compose exec -T app php < tests/integration.php
+          docker compose exec -T app php < tests/reception_hours.php
+          docker compose exec -T app php < tests/unavailable_teacher.php
           bash tests/migrations.sh
           python3 tests/http_smoke.py
       - name: Audit locked dependencies
@@ -85,8 +87,14 @@ jobs:
           gcloud run jobs update "$SERVICE-migrate" --image="$APP_IMAGE" --region="$REGION" --quiet
           gcloud run jobs execute "$SERVICE-migrate" --region="$REGION" --wait --quiet
       - name: Deploy verified revision
+        id: deploy
         uses: google-github-actions/deploy-cloudrun@2028e2d7d30a78c6910e0632e48dd561b064884d # v3
         with:
           service: ${{ env.SERVICE }}
           region: ${{ env.REGION }}
           image: ${{ env.APP_IMAGE }}
+      - name: Check deployed service
+        env:
+          SERVICE_URL: ${{ steps.deploy.outputs.url }}
+        run: |
+          curl --fail --silent --show-error --retry 3 --max-time 30 "$SERVICE_URL/healthz.php"

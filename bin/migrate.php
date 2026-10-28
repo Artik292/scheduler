@@ -24,7 +24,7 @@ try {
                 }
             }
             $duplicates = $pdo->query('SELECT COUNT(*) FROM (SELECT teacher_id, time FROM vecaki GROUP BY teacher_id, time HAVING COUNT(*) > 1) AS duplicates')->fetchColumn();
-            $invalid = $pdo->query("SELECT COUNT(*) FROM vecaki WHERE time IS NULL OR time NOT REGEXP '^1[78]:[0-5]0$'")->fetchColumn();
+            $invalid = $pdo->query("SELECT COUNT(*) FROM vecaki WHERE time IS NULL OR time NOT REGEXP '^([01][0-9]|2[0-3]):[0-5]0$'")->fetchColumn();
             if ((int) $duplicates > 0 || (int) $invalid > 0) {
                 throw new RuntimeException('Existing appointments contain duplicate or invalid slots. Resolve them manually and rerun; no appointments were deleted.');
             }
@@ -54,6 +54,22 @@ try {
                 $stmt->execute([$code, $text, $code]);
             }
             $pdo->exec('INSERT IGNORE INTO counter (id, counter) VALUES (1, 0)');
+        },
+        '004_teacher_reception_hours' => static function (PDO $pdo): void {
+            $columns = $pdo->query('SHOW COLUMNS FROM teacher')->fetchAll(PDO::FETCH_COLUMN);
+            foreach (['start_time' => '17:00', 'end_time' => '19:00'] as $name => $default) {
+                if (!in_array($name, $columns, true)) {
+                    $pdo->exec('ALTER TABLE teacher ADD COLUMN `' . $name . '` VARCHAR(5) NOT NULL DEFAULT ' . $pdo->quote($default));
+                }
+            }
+        },
+        '005_teacher_unavailable_message' => static function (PDO $pdo): void {
+            $stmt = $pdo->prepare('INSERT INTO text (code, text) SELECT ?, ? WHERE NOT EXISTS (SELECT 1 FROM text WHERE code = ?)');
+            $stmt->execute([
+                Model\Text::TEACHER_UNAVAILABLE_MESSAGE,
+                Model\Text::DEFAULT_TEACHER_UNAVAILABLE_MESSAGE,
+                Model\Text::TEACHER_UNAVAILABLE_MESSAGE,
+            ]);
         },
     ];
     foreach ($migrations as $version => $migration) {
