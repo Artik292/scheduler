@@ -1,12 +1,16 @@
 <?php
+
+declare(strict_types=1);
+
 namespace Model;
 
-class Counter extends \atk4\data\Model {
+class Counter extends \Atk4\Data\Model
+{
     public $table = 'counter';
 
-    function init() {
+    protected function init(): void
+    {
         parent::init();
-
-        $this->addField('counter');
+        $this->addField('counter', ['type' => 'bigint', 'default' => 0]);
     }
 }

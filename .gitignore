@@ -1,7 +1,5 @@
-vendor/
 pdflib-4.1.2/
 fpdf181/
-vendor
 /dist
 *.bak
 .DS_Store
@@ -9,3 +7,17 @@ vendor
 /run.sh
 Agile Toolkit.app
 local.settings.php
+vecaku_diena.tar
+terraform/.terraform/
+terraform/*.tfstate*
+terraform/*.tfplan
+terraform/*.tfvars
+!terraform/*.tfvars.example
+
+/vendor/
+.env
+.env.*
+!.env.example
+gha-creds-*.json
+/var/
+/public/atk/

@@ -1,46 +1,52 @@
 <?php
 
-class App extends \atk4\ui\App {
-    public $db;
-    public $sms;
+declare(strict_types=1);
 
-    function __construct($mode) {
-        parent::__construct('Vecāku diena');
+namespace Scheduler;
 
-        if ($mode == 'public') {
-            $this->initLayout('Centered');
+use Atk4\Data\Persistence\Sql;
+use Atk4\Ui\Js\JsExpression;
+use Atk4\Ui\Layout;
 
-            $this->layout->template->del('Header');
-
-            $logo = 'logo.png';
-
-            $this->layout->add(['Image',$logo,'small centered'],'Header');
-            //$this->layout->add(['Label','Work','red right'],'Header');
-
-
-            $this->layout->add([
-                'Header',
-                'Vecāku diena',
-                'size'=>'huge',
-                'aligned' => 'center',
-            ], 'Header');
-
-        }elseif($mode == 'admin') {
-            $this->initLayout('Admin');
-            $this->layout->leftMenu->addItem(['Galvenā lapa', 'icon'=>'home'], ['logout']);
-            $this->layout->leftMenu->addItem(['Priekšmeti', 'icon'=>'book'], ['admin','check'=>'lessons']);
-            $this->layout->leftMenu->addItem(['Skolotāji', 'icon'=>'users'], ['admin','check'=>'teachers']);
-            $this->layout->leftMenu->addItem(['Ieraksti', 'icon'=>'unordered list'], ['admin']);
-        }elseif($mode == 'print') {
-            $this->initLayout('Centered');
-
-            $this->layout->template->del('Header');
-        }
-       if (isset($_ENV['CLEARDB_DATABASE_URL'])) {
-            $this->db = \atk4\data\Persistence::connect($_ENV['CLEARDB_DATABASE_URL']);
+class App extends \Atk4\Ui\App
+{
+    public function __construct(string $mode = 'public')
+    {
+        parent::__construct(['title' => 'Vecāku diena']);
+        $this->db = new Sql(Database::parameters());
+        $this->cdn = array_map(static fn ($url) => preg_replace('~^.*?/public(?=/|$)~', '/atk', $url), $this->cdn);
+        if ($mode === 'admin') {
+            $this->initLayout([Layout\Admin::class]);
+            $this->layout->menuLeft->addItem(['Galvenā lapa', 'icon' => 'home'], ['index']);
+            $this->layout->menuLeft->addItem(['Priekšmeti', 'icon' => 'book'], ['admin', 'check' => 'lessons']);
+            $this->layout->menuLeft->addItem(['Skolotāji', 'icon' => 'users'], ['admin', 'check' => 'teachers']);
+            $this->layout->menuLeft->addItem(['Ieraksti', 'icon' => 'list'], ['admin']);
+            $this->layout->menuLeft->addItem(['Virsraksti', 'icon' => 'pencil'], ['admin', 'check' => 'text']);
         } else {
-            $this->db = \atk4\data\Persistence::connect('mysql:host=127.0.0.1;dbname=scheduler;charset=utf8', 'root', '');
+            $this->initLayout([Layout\Centered::class, 'image' => '/logo.png']);
+            if ($mode === 'print') {
+                $this->layout->template->tryDel('Header');
+            }
+        }
+        $this->html->js(true, new JsExpression('$.ajaxSetup({headers: {"X-CSRF-Token": []}})', [$_SESSION['csrf']]));
+        $this->html->template->dangerouslyAppendHtml('Head', '<meta name="csrf-token" content="' . $_SESSION['csrf'] . '">');
+        $this->addStyle('@media print { .no-print, .atk-admin-top-menu { display: none !important; } }');
+    }
+
+    public function renderExceptionHtml(\Throwable $exception): string
+    {
+        error_log((string) $exception);
+        if (getenv('APP_ENV') === 'local') {
+            return parent::renderExceptionHtml($exception);
         }
 
-}
+        return '<p>Pakalpojums īslaicīgi nav pieejams.</p>';
+    }
+
+    public function text(string $code): string
+    {
+        $entity = (new \Model\Text($this->db))->tryLoadBy('code', $code);
+
+        return $entity === null ? '' : $entity->get('text');
+    }
 }

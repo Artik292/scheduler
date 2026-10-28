@@ -1,0 +1,100 @@
+name: Build, verify and deploy
+
+on:
+  push:
+    branches: [main, v2, v3]
+  pull_request:
+    branches: [main, v2, v3]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: scheduler-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: false
+
+env:
+  REGION: ${{ vars.GCP_REGION || 'europe-north1' }}
+  REPOSITORY: vecaku-diena
+  SERVICE: vecaku-diena-cloudrun
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - name: Create isolated test credentials
+        run: |
+          python3 - <<'PYTHON'
+          from pathlib import Path
+          import secrets
+          Path('.env').write_text(''.join(name + '=' + secrets.token_hex(24) + '\n' for name in ['DB_PASSWORD', 'DB_ROOT_PASSWORD', 'ADMIN_PASSWORD', 'TEACHERS_PASSWORD']))
+          PYTHON
+      - name: Build and start
+        run: |
+          docker compose build --pull
+          docker compose up -d --wait
+          docker compose exec -T app php bin/migrate.php --demo
+      - name: Check PHP and database behavior
+        run: |
+          docker compose exec -T app sh -c 'find /app/src /app/public /app/bin -name "*.php" -exec php -l {} \;'
+          docker compose exec -T app php < tests/integration.php
+          docker compose exec -T app php < tests/reception_hours.php
+          docker compose exec -T app php < tests/unavailable_teacher.php
+          bash tests/migrations.sh
+          python3 tests/http_smoke.py
+      - name: Audit locked dependencies
+        run: docker build --target dependencies -t scheduler-dependencies . && docker run --rm scheduler-dependencies composer audit --locked --no-dev --abandoned=report
+      - name: Logs on failure
+        if: failure()
+        run: docker compose logs --no-color --tail=100
+      - name: Stop test environment
+        if: always()
+        run: docker compose down --volumes
+
+  deploy:
+    needs: verify
+    if: github.ref == 'refs/heads/main' && github.event_name != 'pull_request'
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    environment: production
+    permissions:
+      contents: read
+      id-token: write
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - name: Authenticate with Workload Identity Federation
+        uses: google-github-actions/auth@7c6bc770dae815cd3e89ee6cdf493a5fab2cc093 # v3
+        with:
+          project_id: ${{ vars.GCP_PROJECT_ID }}
+          workload_identity_provider: ${{ vars.GCP_WORKLOAD_IDENTITY_PROVIDER }}
+          service_account: ${{ vars.GCP_DEPLOY_SERVICE_ACCOUNT }}
+      - uses: google-github-actions/setup-gcloud@aa5489c8933f4cc7a4f7d45035b3b1440c9c10db # v3.0.1
+      - name: Build and publish immutable image
+        env:
+          PROJECT_ID: ${{ vars.GCP_PROJECT_ID }}
+        run: |
+          gcloud run services describe "$SERVICE" --region="$REGION" --project="$PROJECT_ID" >/dev/null
+          gcloud auth configure-docker "$REGION-docker.pkg.dev" --quiet
+          IMAGE="$REGION-docker.pkg.dev/$PROJECT_ID/$REPOSITORY/vecaku-diena:$GITHUB_SHA"
+          docker build --pull --platform linux/amd64 -t "$IMAGE" .
+          docker push "$IMAGE"
+          echo "APP_IMAGE=$IMAGE" >> "$GITHUB_ENV"
+      - name: Apply database migrations before releasing application
+        run: |
+          gcloud run jobs update "$SERVICE-migrate" --image="$APP_IMAGE" --region="$REGION" --quiet
+          gcloud run jobs execute "$SERVICE-migrate" --region="$REGION" --wait --quiet
+      - name: Deploy verified revision
+        id: deploy
+        uses: google-github-actions/deploy-cloudrun@2028e2d7d30a78c6910e0632e48dd561b064884d # v3
+        with:
+          service: ${{ env.SERVICE }}
+          region: ${{ env.REGION }}
+          image: ${{ env.APP_IMAGE }}
+      - name: Check deployed service
+        env:
+          SERVICE_URL: ${{ steps.deploy.outputs.url }}
+        run: |
+          curl --fail --silent --show-error --retry 3 --max-time 30 "$SERVICE_URL/healthz.php"
