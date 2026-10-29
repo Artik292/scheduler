@@ -14,11 +14,20 @@ CREATE TABLE IF NOT EXISTS teacher (
     surname VARCHAR(255) NOT NULL,
     class VARCHAR(150) DEFAULT NULL,
     cabinet VARCHAR(50) NOT NULL,
-    subject_id INT UNSIGNED NOT NULL,
+    subject_id INT UNSIGNED DEFAULT NULL,
     available TINYINT(1) NOT NULL DEFAULT 1,
     start_time VARCHAR(5) NOT NULL DEFAULT '17:00',
     end_time VARCHAR(5) NOT NULL DEFAULT '19:00',
     CONSTRAINT fk_teacher_subject FOREIGN KEY (subject_id) REFERENCES subject(id)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+CREATE TABLE IF NOT EXISTS teacher_subject (
+    teacher_id INT UNSIGNED NOT NULL,
+    subject_id INT UNSIGNED NOT NULL,
+    PRIMARY KEY (teacher_id, subject_id),
+    INDEX teacher_subject_subject (subject_id, teacher_id),
+    CONSTRAINT fk_teacher_subject_teacher FOREIGN KEY (teacher_id) REFERENCES teacher(id) ON DELETE CASCADE,
+    CONSTRAINT fk_teacher_subject_subject FOREIGN KEY (subject_id) REFERENCES subject(id) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 CREATE TABLE IF NOT EXISTS text (

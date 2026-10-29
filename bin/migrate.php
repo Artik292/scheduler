@@ -71,23 +71,61 @@ try {
                 Model\Text::TEACHER_UNAVAILABLE_MESSAGE,
             ]);
         },
+        '006_teacher_multiple_subjects' => static function (PDO $pdo): void {
+            $pdo->exec('ALTER TABLE teacher MODIFY subject_id INT UNSIGNED DEFAULT NULL');
+            $pdo->exec('CREATE TABLE IF NOT EXISTS teacher_subject (
+                teacher_id INT UNSIGNED NOT NULL,
+                subject_id INT UNSIGNED NOT NULL,
+                PRIMARY KEY (teacher_id, subject_id),
+                INDEX teacher_subject_subject (subject_id, teacher_id),
+                CONSTRAINT fk_teacher_subject_teacher FOREIGN KEY (teacher_id) REFERENCES teacher(id) ON DELETE CASCADE,
+                CONSTRAINT fk_teacher_subject_subject FOREIGN KEY (subject_id) REFERENCES subject(id) ON DELETE CASCADE
+            ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4');
+            $pdo->exec('INSERT IGNORE INTO teacher_subject (teacher_id, subject_id)
+                SELECT t.id, t.subject_id FROM teacher t JOIN subject s ON s.id = t.subject_id');
+        },
+        '007_teacher_roster_2026' => static function (PDO $pdo): void {
+            Scheduler\TeacherRoster::importOnce($pdo, dirname(__DIR__) . '/database/imports/pedagogu_saraksts_2026.csv');
+        },
     ];
+    $through = null;
+    foreach (array_slice($argv, 1) as $argument) {
+        if (str_starts_with($argument, '--through=')) {
+            $through = substr($argument, strlen('--through='));
+        } elseif ($argument !== '--demo') {
+            throw new InvalidArgumentException('Unknown migration option: ' . $argument);
+        }
+    }
+    if ($through !== null && !array_key_exists($through, $migrations)) {
+        throw new InvalidArgumentException('Unknown target migration.');
+    }
     foreach ($migrations as $version => $migration) {
         $stmt = $pdo->prepare('SELECT 1 FROM schema_migrations WHERE version = ?');
         $stmt->execute([$version]);
-        if ($stmt->fetchColumn()) {
-            continue;
+        if (!$stmt->fetchColumn()) {
+            $migration($pdo);
+            $pdo->prepare('INSERT IGNORE INTO schema_migrations (version) VALUES (?)')->execute([$version]);
+            echo 'Applied ' . $version . PHP_EOL;
         }
-        $migration($pdo);
-        $pdo->prepare('INSERT INTO schema_migrations (version) VALUES (?)')->execute([$version]);
-        echo 'Applied ' . $version . PHP_EOL;
+        if ($version === $through) {
+            break;
+        }
     }
     if (in_array('--demo', $argv, true)) {
         if (getenv('APP_ENV') !== 'local') {
             throw new RuntimeException('Demo data can only be created with APP_ENV=local.');
         }
-        $pdo->exec("INSERT IGNORE INTO subject (id, name) VALUES (1, 'Demonstrācijas grupa')");
-        $pdo->exec("INSERT IGNORE INTO teacher (id, name, surname, class, cabinet, subject_id, available) VALUES (1, 'Demo', 'Skolotājs', '5A', '101', 1, 1)");
+        $db = new Atk4\Data\Persistence\Sql(Database::parameters());
+        $subjects = new Model\Subject($db);
+        $subject = $subjects->tryLoadBy('name', 'Demonstrācijas grupa')
+            ?? $subjects->createEntity()->save(['name' => 'Demonstrācijas grupa']);
+        $teachers = new Model\Teacher($db);
+        if ($teachers->tryLoadBy('name', 'Demo') === null) {
+            $teachers->createEntity()->save([
+                'name' => 'Demo', 'surname' => 'Skolotājs', 'class' => '5A', 'cabinet' => '101',
+                'subject_ids' => [$subject->getId()],
+            ]);
+        }
         echo 'Demo data ready.' . PHP_EOL;
     }
     echo 'Database is up to date.' . PHP_EOL;

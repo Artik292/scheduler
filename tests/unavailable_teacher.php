@@ -37,7 +37,7 @@ $teacher = null;
 try {
     $teacher = (new Model\Teacher($db))->createEntity()->save([
         'name' => 'Absent test teacher', 'surname' => 'NoticeTest', 'cabinet' => 'TEST',
-        'subject_id' => $subject->getId(), 'available' => false,
+        'subject_ids' => [$subject->getId()], 'available' => false,
     ]);
     $teacherId = (int) $teacher->getId();
     $body = noticePage((int) $subject->getId(), $teacherId);

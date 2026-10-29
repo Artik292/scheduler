@@ -13,7 +13,8 @@ foreach ([
     'SELECT end_time FROM teacher WHERE id = 1' => '19:00',
     "SELECT text FROM text WHERE code = 'teacher_unavailable_message'" => getenv('EXPECTED_UNAVAILABLE_MESSAGE') ?: Model\Text::DEFAULT_TEACHER_UNAVAILABLE_MESSAGE,
     "SELECT COUNT(*) FROM text WHERE code = 'teacher_unavailable_message'" => '1',
-    'SELECT COUNT(*) FROM schema_migrations' => '5',
+    'SELECT subject_id FROM teacher_subject WHERE teacher_id = 1' => '1',
+    'SELECT COUNT(*) FROM schema_migrations' => '6',
 ] as $sql => $expected) {
     if ((string) $pdo->query($sql)->fetchColumn() !== $expected) {
         throw new RuntimeException('Legacy migration assertion failed: ' . $sql);

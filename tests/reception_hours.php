@@ -50,13 +50,13 @@ $data = ['student_name' => 'Test student 😀', 'grade' => '5A', 'parent_name' =
 try {
     foreach (['Custom', 'Default'] as $name) {
         $teacher = (new Model\Teacher($db))->createEntity()->save([
-            'name' => $name, 'surname' => 'Hours', 'cabinet' => 'TEST', 'subject_id' => $subject->getId(),
+            'name' => $name, 'surname' => 'Hours', 'cabinet' => 'TEST', 'subject_ids' => [$subject->getId()],
         ]);
         $teacherIds[] = (int) $teacher->getId();
     }
     [$teacherId, $otherTeacherId] = $teacherIds;
     $legacyTeacher = (new Model\Teacher($db))->createEntity()->save([
-        'name' => 'Legacy full name', 'cabinet' => 'TEST', 'subject_id' => $subject->getId(),
+        'name' => 'Legacy full name', 'cabinet' => 'TEST', 'subject_ids' => [$subject->getId()],
     ]);
     $teacherIds[] = (int) $legacyTeacher->getId();
     $legacyTeacher->save(['start_time' => '16:30', 'end_time' => '18:00']);

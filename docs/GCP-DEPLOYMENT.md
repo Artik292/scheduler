@@ -71,7 +71,7 @@ gcloud run jobs execute vecaku-diena-cloudrun-migrate \
 
 Откройте <https://vecaku-diena-cloudrun-irprdit76a-lz.a.run.app>.
 
-Проверьте главную страницу, вход администратора, 6 групп и 26 преподавателей, кабинеты и латышские символы. Для входа используйте значения `admin_password` и `teachers_password` из локального `terraform/production.auto.tfvars`.
+Проверьте главную страницу, вход администратора, сохранённые группы и тексты, кабинеты и латышские символы. В текущей версии миграция `007_teacher_roster_2026` заменяет учителей исторического дампа на 103 учителя из XLSX, без предметов. Назначьте предметы в **Skolotāji → Priekšmeti**; [подробности](TEACHER-ROSTER.md). Для входа используйте значения `admin_password` и `teachers_password` из локального `terraform/production.auto.tfvars`.
 
 Проверка <https://vecaku-diena-cloudrun-irprdit76a-lz.a.run.app/healthz.php> должна возвращать `ok`, однако подключение к базе нужно проверить открытием страниц приложения.
 

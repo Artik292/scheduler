@@ -13,7 +13,6 @@ class Subject extends \Atk4\Data\Model
     {
         parent::init();
         $this->addField('name', ['caption' => 'Grupa', 'required' => true]);
-        $this->hasMany('Teacher', ['model' => [Teacher::class]]);
         $this->setOrder('name');
     }
 }

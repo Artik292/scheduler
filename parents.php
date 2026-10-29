@@ -38,8 +38,7 @@ $app->stickyGet('t');
 $subjectId = filter_var($_GET['pr'] ?? null, FILTER_VALIDATE_INT, ['options' => ['min_range' => 1]]);
 $teacherId = filter_var($_GET['t'] ?? null, FILTER_VALIDATE_INT, ['options' => ['min_range' => 1]]);
 if ($subjectId) {
-    $teachers = new Model\Teacher($app->db);
-    $teachers->addCondition('subject_id', $subjectId);
+    $teachers = (new Model\Teacher($app->db))->forSubject($subjectId);
     $table = Table::addTo($c2);
     $table->setModel($teachers, ['name', 'surname', 'class']);
     $table->addDecorator('name', [Table\Column\Link::class, ['parents', 'pr' => $subjectId], ['t' => 'id']]);

@@ -1,14 +1,10 @@
 # Релиз через GitHub Actions
 
-Эта инструкция обновляет работающий проект `vecaku-diena-2026`. В текущий выпуск входят индивидуальные часы приёма и редактируемое сообщение об отсутствии преподавателя. Команды выполняйте из корня `scheduler`, когда будете готовы опубликовать проверенные изменения.
+Этот выпуск добавляет несколько предметов у одного преподавателя и **один раз заменяет всех учителей и записи к ним** списком из `docs/pedagogu_saraksts.xlsx`: 103 учителя без назначенных предметов. Тексты сайта и предметы сохраняются. [Что именно импортируется](TEACHER-ROSTER.md).
 
-Pipeline находится в `.github/workflows/google-cloudrun-docker.yml` и называется **Build, verify and deploy**. Ветки `v3` и `v2` запускают проверки, а `main` после проверок запускает развёртывание. Доступ GitHub к GCP через Workload Identity Federation также разрешён только для `main`.
+## 1. Проверить переменные
 
-На момент подготовки инструкции рабочая ветка — `v3`, удалённая ветка по умолчанию — `master`, а ветка `main` ещё не создана. Ниже отдельно описан её первый выпуск.
-
-## 1. Проверить environment production
-
-В репозитории GitHub откройте **Settings → Environments → production → Variables** и проверьте значения:
+В GitHub откройте **Settings → Secrets and variables → Actions → Variables**. Можно также использовать переменные environment `production`. Нужны именно **Variables**, поскольку workflow читает `vars.*`:
 
 | Переменная | Значение |
 | --- | --- |
@@ -17,90 +13,76 @@ Pipeline находится в `.github/workflows/google-cloudrun-docker.yml` и
 | `GCP_WORKLOAD_IDENTITY_PROVIDER` | `projects/109229299371/locations/global/workloadIdentityPools/scheduler-github-2026/providers/github` |
 | `GCP_DEPLOY_SERVICE_ACCOUNT` | `scheduler-deploy@vecaku-diena-2026.iam.gserviceaccount.com` |
 
-Если в environment настроены ограничения веток, разрешите развёртывание из `main`. Если настроено ручное подтверждение релиза, подтвердите job `deploy`, когда pipeline его запросит.
+Рабочий pipeline уже использует Workload Identity Federation; JSON-ключ для этого выпуска не нужен.
 
-## 2. Создать резервную копию базы перед первым выпуском миграций
+## 2. Создать резервную копию базы
+
+Перед merge в `main` выполните и дождитесь успешного завершения:
 
 ```bash
 gcloud sql backups create \
   --instance=vecaku-diena \
   --project=vecaku-diena-2026 \
-  --description="Before reception hours and absence notice release"
+  --description="Before multiple subjects and teacher roster replacement"
 ```
 
-Дождитесь успешного завершения. Описание команды: [Cloud SQL backup](https://docs.cloud.google.com/sdk/gcloud/reference/sql/backups/create).
+Команда ожидает завершения, если не указан `--async`. [Документация Cloud SQL backup](https://docs.cloud.google.com/sdk/gcloud/reference/sql/backups/create).
 
-## 3. Сохранить изменения в v3 и запустить проверки
+## 3. Сохранить изменения и открыть PR
 
-Проверьте текущую ветку и изменения:
+Из корня проекта создайте рабочую ветку, если сейчас находитесь в `main`:
 
 ```bash
-git branch --show-current
+git switch -c feature/teacher-subjects-roster
+```
+
+Проверьте изменения и добавьте файлы этого выпуска:
+
+```bash
 git status --short
 git diff
-```
 
-Для текущего набора изменений добавьте в коммит приложение, тесты, pipeline, документацию и подготовленную конфигурацию:
-
-```bash
-git add -- .github/workflows/google-cloudrun-docker.yml README.md \
-  parents.php bin/ database/ src/ tests/ \
-  docs/scheduler_orig.sql docs/CUSTOM-DOMAIN.md docs/GCP-DEPLOYMENT.md \
-  docs/RELEASE.md cloudflare/worker.mjs terraform/main.tf
+git add -- .github/workflows/google-cloudrun-docker.yml README.md parents.php \
+  bin/migrate.php bin/convert_teacher_roster.py \
+  database/schema.sql database/imports/pedagogu_saraksts_2026.csv \
+  src/TeacherRoster.php src/Model/Teacher.php src/Model/Subject.php \
+  tests/reception_hours.php tests/unavailable_teacher.php tests/multiple_subjects.php \
+  tests/teacher_roster_conversion.py tests/roster_import.php \
+  tests/migrations.sh tests/verify_migration.php \
+  docs/pedagogu_saraksts.xlsx docs/TEACHER-ROSTER.md docs/RELEASE.md docs/GCP-DEPLOYMENT.md
 
 git diff --cached --stat
-git commit -m "Add teacher reception hours and editable absence notice"
-git push origin v3
+git commit -m "Support multiple teacher subjects and replace the teacher roster"
+git push -u origin feature/teacher-subjects-roster
 ```
 
-Секреты `.env` и `terraform/production.auto.tfvars`, локальный state и планы Terraform исключены из Git. Перед коммитом проверьте список подготовленных файлов.
-
-В GitHub откройте **Actions → Build, verify and deploy** и дождитесь успешного job **verify** для этого коммита из `v3`. Он собирает приложение и выполняет тесты на отдельной MySQL. Job **deploy** в этой ветке будет отмечен как **Skipped** — это предусмотренное поведение.
+Откройте PR этой ветки в **main** и дождитесь зелёного **verify**. Он собирает образ, проверяет совпадение XLSX и CSV, старую и новую схемы, сохранность данных при импорте, повторные миграции, общие слоты и прежние функции приложения на отдельной MySQL.
 
 ## 4. Выпустить main
 
-Для первого выпуска, когда удалённой ветки `main` ещё нет, создайте её из уже проверенного коммита `v3`:
+Выполните merge PR. Workflow **Build, verify and deploy** автоматически запустится для `main`:
 
-```bash
-git push origin v3:main
-```
+1. `verify` проверит приложение.
+2. `deploy` соберёт и загрузит образ в Artifact Registry.
+3. Cloud Run Job выполнит `php bin/migrate.php`: сначала `006_teacher_multiple_subjects`, затем `007_teacher_roster_2026`.
+4. После успешных миграций pipeline развернёт новую ревизию `vecaku-diena-cloudrun` и проверит `/healthz.php`.
 
-Эта команда создаёт `main` и сразу запускает production pipeline. Выполняйте её после настройки `production` и успешной проверки `v3`.
+Для работающего проекта не нужны ручной SQL-импорт и `terraform apply`. Cloudflare Worker продолжит использовать прежний адрес Cloud Run.
 
-Затем в GitHub **Settings → Default branch** выберите `main`. Это позволит использовать ручной запуск обновлённого workflow из интерфейса GitHub. [Настройка ветки по умолчанию](https://docs.github.com/en/repositories/configuring-branches-and-merges-in-your-repository/managing-branches-in-your-repository/changing-the-default-branch).
+Повторный запуск пропускает `007`: ручные назначения предметов, новые записи родителей и изменённые часы останутся на месте. Если импорт завершился, а последующий deploy упал, устраните ошибку и повторите pipeline. При ошибке самого импорта его транзакция откатится полностью.
 
-Для последующих выпусков создавайте pull request из `v3` в `main`, дождитесь проверок и выполните merge. Push после merge автоматически запустит production pipeline.
+## 5. Назначить предметы и проверить сайт
 
-## 5. Дождаться pipeline
+Откройте <https://esgribu.lv/go.php>, затем **Skolotāji**:
 
-В **Actions → Build, verify and deploy** откройте запуск для `main`. Последовательность выпуска:
+- В списке 103 новых учителя с кабинетами из файла; Tatjana Aļeņina одна.
+- В редактировании учителя выберите один или несколько **Priekšmeti** и сохраните. До назначения предмета учитель виден только в административном/учительском списке.
+- Настройте индивидуальные часы и **Būs**, где необходимо. После импорта часы по умолчанию 17:00–19:00.
+- На странице родителей проверьте, что учитель появляется в обоих выбранных предметах с одинаковыми временами. Запись на один слот должна блокировать его в обоих предметах.
+- Проверьте сохранность **Priekšmeti** и **Virsraksti**. Сообщение об отсутствии остаётся редактируемым как прежде.
 
-1. **verify** — сборка, проверки PHP, бронирования, индивидуальных часов, сообщения об отсутствии, миграций, HTTP и зависимостей.
-2. **Authenticate with Workload Identity Federation** — вход в GCP.
-3. **Build and publish immutable image** — сборка `linux/amd64` и загрузка образа с тегом SHA коммита в Artifact Registry.
-4. **Apply database migrations before releasing application** — обновление образа задачи миграций и ожидание успешного выполнения `php bin/migrate.php`.
-5. **Deploy verified revision** — новая ревизия сервиса `vecaku-diena-cloudrun`.
-6. **Check deployed service** — HTTP-проверка `/healthz.php`.
-
-Миграция `004_teacher_reception_hours` добавит преподавателям часы 17:00–19:00, если этот этап ещё не выполнен. Миграция `005_teacher_unavailable_message` добавит текст `teacher_unavailable_message`. Повторные запуски поддерживаются; существующие записи родителей, часы и отредактированное сообщение сохраняются.
-
-Если задача миграций завершится с ошибкой, шаг развёртывания новой ревизии не запустится. Откройте логи упавшего шага, устраните причину и повторите запуск pipeline. Ошибка шага **Check deployed service** возникает уже после развёртывания: в этом случае проверьте состояние новой ревизии Cloud Run.
-
-Для этих изменений достаточно релиза приложения с миграциями. Повторный импорт SQL-дампа и новый `terraform apply` не требуются. Cloudflare Worker продолжит передавать запросы тому же Cloud Run.
-
-## 6. Проверить результат
-
-Откройте <https://esgribu.lv/> либо <https://vecaku-diena-cloudrun-irprdit76a-lz.a.run.app/>.
-
-Войдите администратором через `/go.php` и проверьте:
-
-- В **Skolotāji** есть поля **Pieņemšana no** и **Pieņemšana līdz**.
-- Преподаватель с выключенным **Būs** остаётся в списке родителей; при выборе вместо слотов появляется сообщение **Pedagoga nebūs…**.
-- В **Virsraksti** появилась запись `teacher_unavailable_message`. Изменение её поля `text` отображается на странице родителей при следующем открытии.
-- У доступного преподавателя отображаются слоты его индивидуального расписания.
+Импорт не восстанавливается откатом только контейнерного образа: для возврата старого списка и старых записей потребуется резервная копия БД. Не удаляйте отметку `007_teacher_roster_2026` для повторного выпуска.
 
 ## Ручной повторный запуск
 
-Когда `main` станет веткой по умолчанию и будет содержать обновлённый workflow, откройте **Actions → Build, verify and deploy → Run workflow**, выберите ветку **main** и нажмите **Run workflow**. Повторный запуск для `v3` выполнит проверки.
-
-Условие GitHub для ручного запуска: workflow с `workflow_dispatch` должен находиться в ветке по умолчанию. [Документация GitHub](https://docs.github.com/en/actions/how-tos/manage-workflow-runs/manually-run-a-workflow).
+Откройте **Actions → Build, verify and deploy → Run workflow → Branch: main → Run workflow**. Workflow с `workflow_dispatch` должен быть в ветке по умолчанию. [Документация GitHub](https://docs.github.com/en/actions/how-tos/manage-workflow-runs/manually-run-a-workflow).
