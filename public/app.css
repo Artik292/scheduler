@@ -91,6 +91,10 @@
     overflow-wrap: anywhere;
 }
 
+.booking-slots.ui.menu .item:not(.header):not(.disabled) {
+    cursor: pointer;
+}
+
 .booking-back {
     display: none !important;
 }

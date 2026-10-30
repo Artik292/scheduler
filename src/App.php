@@ -41,7 +41,7 @@ class App extends \Atk4\Ui\App
         }
         $this->html->js(true, new JsExpression('$.ajaxSetup({headers: {"X-CSRF-Token": []}})', [$_SESSION['csrf']]));
         $this->html->template->dangerouslyAppendHtml('Head', '<meta name="csrf-token" content="' . $_SESSION['csrf'] . '">');
-        $this->html->template->dangerouslyAppendHtml('Head', '<link rel="stylesheet" href="/app.css?v=3">');
+        $this->html->template->dangerouslyAppendHtml('Head', '<link rel="stylesheet" href="/app.css?v=4">');
         $this->addStyle('@media print { .no-print, .atk-admin-top-menu { display: none !important; } }');
     }
 
