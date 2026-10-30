@@ -7,6 +7,7 @@ namespace Scheduler;
 use Atk4\Data\Persistence\Sql;
 use Atk4\Ui\Js\JsExpression;
 use Atk4\Ui\Layout;
+use Atk4\Ui\View;
 
 class App extends \Atk4\Ui\App
 {
@@ -30,9 +31,17 @@ class App extends \Atk4\Ui\App
         }
         $this->html->template->set('class', 'scheduler-app ' . ($mode === 'admin' ? 'scheduler-admin-page' : 'scheduler-public-page'));
         $this->html->template->set('lang', 'lv');
+        $credit = '<span class="site-credit no-print">Izstrāde un uzturēšana: '
+            . '<a href="https://www.linkedin.com/in/arthur-konevnikov-3b24a7190/" target="_blank" rel="noopener noreferrer">Arthur Konevnikov</a></span>';
+        if ($mode === 'admin') {
+            $this->layout->template->dangerouslySetHtml('Footer', $credit);
+        } elseif ($mode !== 'print') {
+            $footer = View::addTo($this->html, ['element' => 'footer', 'class' => ['site-footer no-print']]);
+            $footer->template->dangerouslySetHtml('Content', $credit);
+        }
         $this->html->js(true, new JsExpression('$.ajaxSetup({headers: {"X-CSRF-Token": []}})', [$_SESSION['csrf']]));
         $this->html->template->dangerouslyAppendHtml('Head', '<meta name="csrf-token" content="' . $_SESSION['csrf'] . '">');
-        $this->html->template->dangerouslyAppendHtml('Head', '<link rel="stylesheet" href="/app.css?v=2">');
+        $this->html->template->dangerouslyAppendHtml('Head', '<link rel="stylesheet" href="/app.css?v=3">');
         $this->addStyle('@media print { .no-print, .atk-admin-top-menu { display: none !important; } }');
     }
 

@@ -4,6 +4,30 @@
     color: #242424;
 }
 
+.scheduler-public-page {
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh;
+}
+
+.site-footer {
+    margin-top: auto;
+    padding: 16px 12px;
+    text-align: center;
+}
+
+.site-credit {
+    color: #626262;
+    font-size: 13px;
+    line-height: 1.5;
+}
+
+.site-credit a {
+    color: inherit;
+    text-decoration: underline;
+    text-underline-offset: 2px;
+}
+
 .scheduler-public-page .ui.middle.aligned.grid.container {
     width: min(1120px, calc(100% - 32px)) !important;
     min-height: auto !important;
@@ -189,6 +213,11 @@
 @media print {
     .scheduler-app {
         background: white;
+    }
+
+    .scheduler-public-page {
+        display: block;
+        min-height: 0;
     }
 
     .scheduler-public-page .ui.middle.aligned.grid.container {
