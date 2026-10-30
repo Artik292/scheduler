@@ -12,6 +12,7 @@ class Teacher extends \Atk4\Data\Model
 {
     public $table = 'teacher';
     public $caption = 'Skolotājs';
+    public ?string $titleField = 'full_name';
 
     protected function init(): void
     {
@@ -20,6 +21,10 @@ class Teacher extends \Atk4\Data\Model
         $this->persistenceData['use_table_prefixes'] = true;
         $this->addField('name', ['caption' => 'Vārds', 'required' => true]);
         $this->addField('surname', ['caption' => 'Uzvārds', 'default' => '']);
+        $this->addExpression('full_name', [
+            'expr' => "TRIM(CONCAT_WS(' ', [name], [surname]))",
+            'caption' => 'Vārds un uzvārds', 'ui' => ['visible' => false],
+        ]);
         $this->addField('class', ['caption' => 'Audzināmā klase']);
         $this->addField('cabinet', ['caption' => 'Kabinets', 'required' => true]);
         $this->addField('available', ['caption' => 'Būs', 'type' => 'boolean', 'default' => true]);
