@@ -28,7 +28,7 @@ $describeTeacher = static function (Model\Teacher $teacher, bool $withClass = fa
     }
     $cabinet = trim((string) $teacher->get('cabinet'));
 
-    return $label . ($cabinet !== '' ? ' - ' . $cabinet . 'kab.' : '');
+    return $label . ($cabinet !== '' ? ' - ' . $cabinet . ' kab.' : '');
 };
 Button::addTo($app, ['Atgriezties mājaslapā', 'icon' => 'reply'])->link(['index']);
 if (isset($_GET['saved'])) {
