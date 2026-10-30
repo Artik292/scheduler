@@ -21,6 +21,15 @@ $app->stickyGet('pr');
 $app->stickyGet('t');
 $subjectId = filter_var($_GET['pr'] ?? null, FILTER_VALIDATE_INT, ['options' => ['min_range' => 1]]);
 $teacherId = filter_var($_GET['t'] ?? null, FILTER_VALIDATE_INT, ['options' => ['min_range' => 1]]);
+$describeTeacher = static function (Model\Teacher $teacher, bool $withClass = false): string {
+    $label = trim($teacher->get('name') . ' ' . $teacher->get('surname'));
+    if ($withClass && $teacher->get('class')) {
+        $label .= ' (' . $teacher->get('class') . ')';
+    }
+    $cabinet = trim((string) $teacher->get('cabinet'));
+
+    return $label . ($cabinet !== '' ? ' - ' . $cabinet . 'kab.' : '');
+};
 Button::addTo($app, ['Atgriezties mājaslapā', 'icon' => 'reply'])->link(['index']);
 if (isset($_GET['saved'])) {
     Message::addTo($app, ['Jūsu pieprasījums ir iesniegts!', 'type' => 'success']);
@@ -58,11 +67,7 @@ if ($subjectId) {
     $teachers = (new Model\Teacher($app->db))->forSubject($subjectId);
     $teacherMenu = Menu::addTo($c2, ['class' => ['vertical fluid booking-options']]);
     foreach ($teachers as $candidate) {
-        $label = trim($candidate->get('name') . ' ' . $candidate->get('surname'));
-        if ($candidate->get('class')) {
-            $label .= ' (' . $candidate->get('class') . ')';
-        }
-        $item = $teacherMenu->addItem($label);
+        $item = $teacherMenu->addItem($describeTeacher($candidate, true));
         $item->link(['parents', 'pr' => $subjectId, 't' => $candidate->getId(), 'time' => false, 'saved' => false]);
         if ((int) $candidate->getId() === $teacherId) {
             $item->addClass('active');
@@ -77,22 +82,24 @@ if ($teacher === null) {
     http_response_code(404);
     return;
 }
+$teacherDescription = $describeTeacher($teacher);
 if (!$teacher->get('available')) {
-    Header::addTo($c3, [trim($teacher->get('name') . ' ' . $teacher->get('surname')), 'size' => 4]);
+    Header::addTo($c3, [$teacherDescription, 'size' => 4]);
     Message::addTo($c3, ['type' => 'warning'])->text->addParagraph($app->text(Model\Text::TEACHER_UNAVAILABLE_MESSAGE));
     return;
 }
 $slots = $teacher->getBookingSlots();
 $menu = Menu::addTo($c3, ['class' => ['vertical fluid booking-slots']]);
-$menu->addHeader('Laiki (' . $teacher->get('name') . ' ' . $teacher->get('surname') . ')');
+$menu->addHeader('Laiki (' . $teacherDescription . ')');
 $booked = array_column($teacher->ref('Vecaki')->export(['time']), 'time');
 $page = VirtualPage::addTo($app);
-$page->set(static function (VirtualPage $page) use ($app, $teacherId, $slots) {
+$page->set(static function (VirtualPage $page) use ($app, $teacherId, $slots, $teacherDescription) {
     $time = $app->stickyGet('time');
     if (!is_string($time) || !in_array($time, $slots, true)) {
         Message::addTo($page, ['Nederīgs pieraksta laiks.', 'type' => 'error']);
         return;
     }
+    Header::addTo($page, [$teacherDescription, 'size' => 4]);
     $form = Form::addTo($page);
     $form->buttonSave->set('Sūtīt');
     $entity = (new Model\Vecaki($app->db))->createEntity();
