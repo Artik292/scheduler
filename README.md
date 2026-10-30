@@ -59,6 +59,7 @@ COMPOSE_PROJECT_NAME=scheduler-test bash tests/migrations.sh
 APP_PORT=18080 docker compose -p scheduler-test exec -T app php < tests/reception_hours.php
 APP_PORT=18080 docker compose -p scheduler-test exec -T app php < tests/unavailable_teacher.php
 APP_PORT=18080 docker compose -p scheduler-test exec -T app php < tests/multiple_subjects.php
+APP_PORT=18080 docker compose -p scheduler-test exec -T app php < tests/subject_order.php
 python3 tests/teacher_roster_conversion.py
 TEST_BASE_URL=http://127.0.0.1:18080 python3 tests/http_smoke.py
 APP_PORT=18080 docker compose -p scheduler-test down --volumes
@@ -90,6 +91,12 @@ php bin/migrate.php
 В **Skolotāji → Priekšmeti** можно выбрать несколько предметов или оставить поле пустым. Родитель видит одного и того же преподавателя с общим расписанием в каждом назначенном предмете. Бронирование одного времени блокирует его во всех предметах.
 
 Миграция `006_teacher_multiple_subjects` добавляет связи многие ко многим. Следующая миграция `007_teacher_roster_2026` **один раз заменяет всех преподавателей и записи к ним** на 103 преподавателя из согласованного XLSX, не меняя тексты и предметы. Новые учителя получают пустые предметы, кабинеты из файла и часы 17:00–19:00. Повторный pipeline сохраняет дальнейшие изменения. [Подробности импорта](docs/TEACHER-ROSTER.md).
+
+## Порядок предметов
+
+В административном разделе **Priekšmeti** предметы можно перетаскивать за ручку слева. Кнопки **↑ / ↓** перемещают предмет на одну позицию и доступны на телефоне и с клавиатуры. Изменения сохраняются автоматически; после перезагрузки и на странице родителей используется тот же порядок.
+
+В этом разделе весь список показан на одной странице. Новый предмет добавляется в конец, переименование не меняет его позицию. Миграция `008_subject_order` при первом обновлении сохраняет прежний алфавитный порядок, а при повторном запуске сохраняет выбранную вручную последовательность. Учителя, их предметы, записи родителей и тексты не меняются. Pipeline применяет миграцию перед выпуском новой версии.
 
 ## Индивидуальное время приёма
 

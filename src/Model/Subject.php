@@ -13,6 +13,7 @@ class Subject extends \Atk4\Data\Model
     {
         parent::init();
         $this->addField('name', ['caption' => 'Grupa', 'required' => true]);
-        $this->setOrder('name');
+        $this->addField('sort_order', ['type' => 'bigint', 'default' => \Scheduler\SubjectOrder::UNSORTED, 'system' => true]);
+        $this->setOrder(['sort_order', 'id']);
     }
 }

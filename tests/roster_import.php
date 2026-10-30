@@ -73,6 +73,9 @@ rosterCheck($pdo->query('SELECT name, surname, cabinet FROM teacher ORDER BY id'
 rosterCheck((int) $pdo->query("SELECT COUNT(*) FROM teacher WHERE subject_id IS NOT NULL OR class IS NOT NULL OR available <> 1 OR start_time <> '17:00' OR end_time <> '19:00'")->fetchColumn() === 0, 'import initializes only the requested defaults');
 rosterCheck((int) min(array_column($after['teacher'], 'id')) > (int) max(array_column($before['teacher'], 'id')), 'old teacher IDs are never reused for new people');
 
+$process = proc_open([PHP_BINARY, 'bin/migrate.php'], [STDIN, STDOUT, STDERR], $pipes);
+rosterCheck(is_resource($process) && proc_close($process) === 0, 'pending schema migrations complete after importing the roster');
+
 $db = new Atk4\Data\Persistence\Sql(Database::parameters());
 $teacher = (new Model\Teacher($db))->load((int) $after['teacher'][0]['id']);
 $teacher->save(['subject_ids' => [(int) $before['subject'][0]['id']], 'start_time' => '16:30']);

@@ -23,3 +23,4 @@ docker compose exec -T -e DB_NAME="$migration_test_db" app php bin/migrate.php -
 docker compose exec -T -e DB_NAME="$migration_test_db" app php bin/migrate.php --through=006_teacher_multiple_subjects
 docker compose exec -T -e DB_NAME="$migration_test_db" -e EXPECTED_TEACHER_START=16:30 -e 'EXPECTED_UNAVAILABLE_MESSAGE=Custom absence message' app php < tests/verify_migration.php
 docker compose exec -T -e DB_NAME="$migration_test_db" app php < tests/roster_import.php
+docker compose exec -T -e DB_NAME="$migration_test_db" app php < tests/subject_order_migration.php

@@ -81,6 +81,21 @@
     overflow-x: auto;
 }
 
+.subject-drag-handle.ui.button {
+    min-width: 44px;
+    cursor: grab;
+    touch-action: none;
+}
+
+.subject-order-arrow.ui.button {
+    min-width: 44px;
+}
+
+.subject-order-table .draggable--over {
+    background: #f3f4f5 !important;
+    opacity: 1;
+}
+
 @media (max-width: 767px) {
     .scheduler-public-page .ui.middle.aligned.grid.container {
         width: calc(100% - 24px) !important;

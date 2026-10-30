@@ -46,6 +46,7 @@ jobs:
           docker compose exec -T app php < tests/reception_hours.php
           docker compose exec -T app php < tests/unavailable_teacher.php
           docker compose exec -T app php < tests/multiple_subjects.php
+          docker compose exec -T app php < tests/subject_order.php
           python3 tests/teacher_roster_conversion.py
           bash tests/migrations.sh
           python3 tests/http_smoke.py

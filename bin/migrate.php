@@ -87,6 +87,36 @@ try {
         '007_teacher_roster_2026' => static function (PDO $pdo): void {
             Scheduler\TeacherRoster::importOnce($pdo, Scheduler\TeacherRoster::configuredFile());
         },
+        '008_subject_order' => static function (PDO $pdo): void {
+            $columns = $pdo->query('SHOW COLUMNS FROM subject')->fetchAll(PDO::FETCH_COLUMN);
+            if (!in_array('sort_order', $columns, true)) {
+                $pdo->exec('ALTER TABLE subject ADD COLUMN sort_order INT UNSIGNED NOT NULL DEFAULT 4294967295');
+            }
+            $indexes = $pdo->query('SHOW INDEX FROM subject')->fetchAll(PDO::FETCH_ASSOC);
+            if (!in_array('subject_sort_order', array_column($indexes, 'Key_name'), true)) {
+                $pdo->exec('ALTER TABLE subject ADD INDEX subject_sort_order (sort_order, id)');
+            }
+            $pdo->beginTransaction();
+            try {
+                $rows = $pdo->query('SELECT id, sort_order FROM subject ORDER BY name, id FOR UPDATE')->fetchAll(PDO::FETCH_ASSOC);
+                $position = 0;
+                foreach ($rows as $row) {
+                    if ((int) $row['sort_order'] !== Scheduler\SubjectOrder::UNSORTED) {
+                        $position = max($position, (int) $row['sort_order']);
+                    }
+                }
+                $update = $pdo->prepare('UPDATE subject SET sort_order = ? WHERE id = ? AND sort_order = 4294967295');
+                foreach ($rows as $row) {
+                    if ((int) $row['sort_order'] === Scheduler\SubjectOrder::UNSORTED) {
+                        $update->execute([++$position, $row['id']]);
+                    }
+                }
+                $pdo->commit();
+            } catch (Throwable $error) {
+                $pdo->rollBack();
+                throw $error;
+            }
+        },
     ];
     $through = null;
     foreach (array_slice($argv, 1) as $argument) {
