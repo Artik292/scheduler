@@ -28,8 +28,11 @@ class App extends \Atk4\Ui\App
                 $this->layout->template->tryDel('Header');
             }
         }
+        $this->html->template->set('class', 'scheduler-app ' . ($mode === 'admin' ? 'scheduler-admin-page' : 'scheduler-public-page'));
+        $this->html->template->set('lang', 'lv');
         $this->html->js(true, new JsExpression('$.ajaxSetup({headers: {"X-CSRF-Token": []}})', [$_SESSION['csrf']]));
         $this->html->template->dangerouslyAppendHtml('Head', '<meta name="csrf-token" content="' . $_SESSION['csrf'] . '">');
+        $this->html->template->dangerouslyAppendHtml('Head', '<link rel="stylesheet" href="/app.css?v=1">');
         $this->addStyle('@media print { .no-print, .atk-admin-top-menu { display: none !important; } }');
     }
 

@@ -1,0 +1,192 @@
+/* Keep the existing Fomantic UI controls; adapt their spacing and layout. */
+.scheduler-app {
+    background: #f7f7f7;
+    color: #242424;
+}
+
+.scheduler-public-page .ui.middle.aligned.grid.container {
+    width: min(1120px, calc(100% - 32px)) !important;
+    min-height: auto !important;
+    margin: 0 auto !important;
+    padding: 24px 0 !important;
+}
+
+.scheduler-public-page .ui.middle.aligned.grid.container > .column {
+    min-width: 0;
+    padding: 0 !important;
+}
+
+.scheduler-public-page .ui.middle.aligned.grid.container > .column > .header .image {
+    width: 80px;
+    height: auto;
+    margin-bottom: 12px;
+}
+
+.scheduler-public-page .piled.segment {
+    padding: 24px;
+    box-shadow: none;
+}
+
+.scheduler-public-page .piled.segment::before,
+.scheduler-public-page .piled.segment::after {
+    display: none;
+}
+
+.home-actions {
+    display: flex;
+    gap: 12px;
+}
+
+.home-actions .ui.button {
+    flex: 1;
+    margin: 0;
+}
+
+.scheduler-app .ui.button,
+.scheduler-app .ui.menu .item {
+    min-height: 44px;
+}
+
+.scheduler-app .ui.form input,
+.scheduler-app .ui.form textarea,
+.scheduler-app .ui.form select,
+.scheduler-app .ui.form .dropdown {
+    font-size: 16px;
+}
+
+.scheduler-app a:focus-visible,
+.scheduler-app button:focus-visible {
+    outline: 2px solid #2185d0;
+    outline-offset: 3px;
+}
+
+.booking-options.ui.menu .item,
+.booking-slots.ui.menu .item {
+    padding: 14px 16px;
+    line-height: 1.4;
+    overflow-wrap: anywhere;
+}
+
+.booking-back {
+    display: none !important;
+}
+
+.scheduler-app .atk-mainContainerWrapper,
+.scheduler-app .atk-grid {
+    min-width: 0;
+    max-width: 100%;
+}
+
+.scheduler-app .atk-grid {
+    overflow-x: auto;
+}
+
+@media (max-width: 767px) {
+    .scheduler-public-page .ui.middle.aligned.grid.container {
+        width: calc(100% - 24px) !important;
+        padding: 16px 0 !important;
+    }
+
+    .scheduler-public-page .piled.segment {
+        padding: 16px;
+    }
+
+    .scheduler-public-page .ui.header,
+    .scheduler-public-page .ui.message {
+        overflow-wrap: anywhere;
+    }
+
+    .home-actions {
+        flex-direction: column;
+    }
+
+    .booking-back {
+        display: inline-flex !important;
+        align-items: center;
+        margin-top: 8px !important;
+    }
+
+    .booking-flow.ui.grid {
+        margin-top: 8px;
+    }
+
+    .booking-flow.ui.grid > .column {
+        min-width: 0;
+        padding: 12px 0 !important;
+    }
+
+    .booking-step-subject > .booking-teachers,
+    .booking-step-subject > .booking-times,
+    .booking-step-teacher > .booking-subjects,
+    .booking-step-teacher > .booking-times,
+    .booking-step-time > .booking-subjects,
+    .booking-step-time > .booking-teachers {
+        display: none !important;
+    }
+
+    .scheduler-app .ui.modal {
+        width: calc(100% - 24px) !important;
+        max-height: calc(100dvh - 24px);
+        margin: 12px auto !important;
+        overflow-y: auto;
+    }
+
+    .scheduler-app .ui.modal > .content,
+    .scheduler-app .ui.modal > .actions {
+        padding: 16px;
+    }
+
+    .scheduler-app .ui.form .fields {
+        flex-direction: column;
+    }
+
+    .scheduler-app .ui.form .fields > .field {
+        width: 100% !important;
+        margin-bottom: 12px;
+    }
+
+    .scheduler-app .atk-mainContainerWrapper {
+        padding: 16px 12px;
+    }
+
+    .scheduler-app .ui.menu:not(.vertical) {
+        flex-wrap: wrap;
+    }
+
+    .scheduler-app .ui.menu > .right.menu {
+        width: 100%;
+        max-width: 100%;
+        margin-left: 0 !important;
+    }
+
+    .scheduler-app .ui.menu > .right.menu > .item {
+        width: 100%;
+        min-width: 0;
+    }
+
+    .scheduler-app .ui.menu .ui.input,
+    .scheduler-app .ui.menu .ui.input input {
+        width: 100%;
+        min-width: 0;
+    }
+}
+
+@media print {
+    .scheduler-app {
+        background: white;
+    }
+
+    .scheduler-public-page .ui.middle.aligned.grid.container {
+        width: 100% !important;
+        padding: 0 !important;
+    }
+
+    .scheduler-public-page .piled.segment {
+        border: 0;
+        padding: 0;
+    }
+
+    .scheduler-app .atk-grid {
+        overflow: visible;
+    }
+}

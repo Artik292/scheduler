@@ -85,7 +85,7 @@ try {
                 SELECT t.id, t.subject_id FROM teacher t JOIN subject s ON s.id = t.subject_id');
         },
         '007_teacher_roster_2026' => static function (PDO $pdo): void {
-            Scheduler\TeacherRoster::importOnce($pdo, dirname(__DIR__) . '/database/imports/pedagogu_saraksts_2026.csv');
+            Scheduler\TeacherRoster::importOnce($pdo, Scheduler\TeacherRoster::configuredFile());
         },
     ];
     $through = null;

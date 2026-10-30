@@ -23,6 +23,10 @@ def request(path, data=None, headers=None):
         response = error
     return response.code, response.read().decode('utf-8'), response.headers
 
+status, _, headers = request('/app.css')
+assert status == 200 and 'text/css' in headers.get('Content-Type', '')
+print('PASS responsive stylesheet is served')
+
 for path in ['/', '/parents.php', '/parents.php?pr=1&t=1', '/go.php', '/teachers_access.php']:
     status, body, headers = request(path)
     assert status == 200, (path, status, body[:500])
@@ -36,7 +40,7 @@ for path in ['/parentslist.php?id=1', '/print.php?id=1', '/admin.php', '/teacher
     assert request(path)[0] == 302, path
     print('PASS authentication required:', path)
 
-for path in ['/docs/db.sql', '/terraform/main.tf', '/.git/config', '/vendor/autoload.php', '/composer.json', '/bootstrap.php', '/database/schema.sql']:
+for path in ['/docs/db.sql', '/docs/pedagogu_saraksts.xlsx', '/database/imports/pedagogu_saraksts_2026.csv', '/terraform/main.tf', '/.git/config', '/vendor/autoload.php', '/composer.json', '/bootstrap.php', '/database/schema.sql']:
     assert request(path)[0] in (403, 404), path
     print('PASS private file blocked:', path)
 

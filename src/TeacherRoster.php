@@ -8,12 +8,17 @@ final class TeacherRoster
 {
     public const VERSION = '007_teacher_roster_2026';
 
+    public static function configuredFile(): string
+    {
+        return getenv('TEACHER_ROSTER_FILE') ?: dirname(__DIR__) . '/database/imports/pedagogu_saraksts_2026.csv';
+    }
+
     /** @return list<array{0: string, 1: string, 2: string}> */
     public static function read(string $file): array
     {
-        $stream = fopen($file, 'rb');
+        $stream = @fopen($file, 'rb');
         if ($stream === false) {
-            throw new \RuntimeException('Could not open the teacher roster.');
+            throw new \RuntimeException('Teacher roster is missing. Supply a private CSV file or the TEACHER_ROSTER_CSV secret before the initial roster migration. Existing data was not changed.');
         }
         try {
             if (fgetcsv($stream, 0, ',', '"', '') !== ['name', 'surname', 'cabinet']) {
@@ -53,21 +58,34 @@ final class TeacherRoster
 
     public static function importOnce(\PDO $pdo, string $file, string $version = self::VERSION): bool
     {
-        // Validate the entire file before changing any database rows.
-        $rows = self::read($file);
         if ((int) $pdo->query("SELECT GET_LOCK('scheduler-migrations', 30)")->fetchColumn() !== 1) {
             throw new \RuntimeException('Could not obtain migration lock.');
         }
         try {
+            $check = $pdo->prepare('SELECT 1 FROM schema_migrations WHERE version = ?');
+            $check->execute([$version]);
+            if ($check->fetchColumn()) {
+                return false;
+            }
+            // The private roster is needed only for the first import, never for later releases.
+            $temporary = null;
+            try {
+                $csv = getenv('TEACHER_ROSTER_CSV');
+                if ($csv !== false && $csv !== '') {
+                    $temporary = tempnam(sys_get_temp_dir(), 'scheduler-roster-');
+                    if ($temporary === false || file_put_contents($temporary, $csv) === false) {
+                        throw new \RuntimeException('Could not prepare the private teacher roster.');
+                    }
+                    $file = $temporary;
+                }
+                $rows = self::read($file);
+            } finally {
+                if ($temporary !== null && $temporary !== false && is_file($temporary)) {
+                    unlink($temporary);
+                }
+            }
             $pdo->beginTransaction();
             try {
-                $check = $pdo->prepare('SELECT 1 FROM schema_migrations WHERE version = ?');
-                $check->execute([$version]);
-                if ($check->fetchColumn()) {
-                    $pdo->commit();
-
-                    return false;
-                }
                 // Serialize with bookings and teacher edits; do not reuse old teacher IDs.
                 $pdo->query('SELECT id FROM teacher ORDER BY id FOR UPDATE')->fetchAll();
                 $appointments = $pdo->exec('DELETE FROM vecaki');

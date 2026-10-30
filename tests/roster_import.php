@@ -16,7 +16,7 @@ function rosterCheck(bool $condition, string $message): void
 }
 
 $pdo = Database::connect();
-$file = getcwd() . '/database/imports/pedagogu_saraksts_2026.csv';
+$file = getcwd() . '/database/fixtures/teacher_roster.csv';
 $snapshot = static function () use ($pdo): array {
     $result = [];
     foreach (['subject', 'text', 'counter', 'teacher', 'teacher_subject', 'vecaki', 'schema_migrations'] as $table) {
@@ -26,6 +26,12 @@ $snapshot = static function () use ($pdo): array {
     return $result;
 };
 $before = $snapshot();
+try {
+    TeacherRoster::importOnce($pdo, '/missing/private-roster.csv');
+    throw new LogicException('Missing private roster was accepted.');
+} catch (RuntimeException $expected) {
+    rosterCheck($snapshot() === $before, 'missing private roster stops before deleting any data');
+}
 // A database write failure after DELETE must roll the entire replacement back.
 $pdo->exec('CREATE UNIQUE INDEX reject_roster_duplicates ON teacher (cabinet)');
 try {
@@ -52,7 +58,12 @@ try {
 } finally {
     unlink($invalid);
 }
-rosterCheck(TeacherRoster::importOnce($pdo, $file), 'teacher roster imported once');
+putenv('TEACHER_ROSTER_CSV=' . file_get_contents($file));
+try {
+    rosterCheck(TeacherRoster::importOnce($pdo, '/missing/private-roster.csv'), 'private CSV secret imports once without a bundled roster');
+} finally {
+    putenv('TEACHER_ROSTER_CSV');
+}
 $after = $snapshot();
 foreach (['subject', 'text', 'counter'] as $table) {
     rosterCheck($after[$table] === $before[$table], $table . ' records preserved byte for byte');
@@ -68,6 +79,7 @@ $teacher->save(['subject_ids' => [(int) $before['subject'][0]['id']], 'start_tim
 Scheduler\Booking::create((int) $teacher->getId(), '16:30', ['student_name' => 'New booking', 'grade' => '5A', 'parent_name' => 'Parent', 'contact_phone' => '12345678']);
 $edited = $snapshot();
 rosterCheck(!TeacherRoster::importOnce($pdo, $file), 'repeated roster import is skipped');
+rosterCheck(!TeacherRoster::importOnce($pdo, '/missing/private-roster.csv'), 'an applied roster migration does not need its private source again');
 for ($i = 0; $i < 2; ++$i) {
     $process = proc_open([PHP_BINARY, 'bin/migrate.php'], [STDIN, STDOUT, STDERR], $pipes);
     rosterCheck(is_resource($process) && proc_close($process) === 0, 'full migration rerun succeeds');

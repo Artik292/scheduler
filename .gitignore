@@ -21,3 +21,11 @@ terraform/*.tfvars
 gha-creds-*.json
 /var/
 /public/atk/
+
+# Real rosters and historical database exports stay local.
+/database/imports/*.csv
+/docs/*.sql
+/docs/*.xlsx
+/docs/*.xls
+/docs/*.csv
+__pycache__/

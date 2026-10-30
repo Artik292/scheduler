@@ -48,6 +48,14 @@ try {
         subjectsCheck(str_contains(subjectsPage($subjectId), 'MultiSubjectUniqueTeacher'), 'shared teacher appears in subject ' . $subjectId);
     }
     subjectsCheck(!str_contains(subjectsPage($ids[2]), 'MultiSubjectUniqueTeacher'), 'teacher is not listed for an unrelated subject');
+    $unsafeName = '<script>window.teacherNameTest=true</script>';
+    $teacher->save(['name' => $unsafeName]);
+    $page = subjectsPage($ids[0]);
+    subjectsCheck(str_contains($page, htmlspecialchars($unsafeName, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8')) && !str_contains($page, $unsafeName), 'teacher list escapes editable names');
+    $teacher->save(['name' => 'MultiSubjectUniqueTeacher']);
+    $subjects[2]->save(['name' => '<script>window.subjectNameTest=true</script>']);
+    $page = subjectsPage($ids[0]);
+    subjectsCheck(str_contains($page, '&lt;script&gt;window.subjectNameTest=true&lt;/script&gt;') && !str_contains($page, '<script>window.subjectNameTest=true</script>'), 'subject list escapes editable names');
     foreach (array_slice($ids, 0, 2) as $subjectId) {
         $page = subjectsPage($subjectId, $teacherId);
         subjectsCheck(str_contains($page, '>16:30<') && str_contains($page, '>17:50<') && !str_contains($page, '>18:00<'), 'both subjects show the same custom reception window');

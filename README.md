@@ -25,11 +25,16 @@ p = Path('.env')
 if p.exists():
     raise SystemExit('.env already exists; preserve your credentials')
 p.write_text(''.join(name + '=' + secrets.token_hex(24) + '\n' for name in ['DB_PASSWORD', 'DB_ROOT_PASSWORD', 'ADMIN_PASSWORD', 'TEACHERS_PASSWORD']))
+if not Path('database/imports/pedagogu_saraksts_2026.csv').is_file():
+    with p.open('a') as output:
+        output.write('TEACHER_ROSTER_FILE=/app/database/fixtures/teacher_roster.csv\n')
 p.chmod(0o600)
 PYTHON
 
 docker compose up -d --build --wait
 ```
+
+Для нового клона без реального CSV можно использовать вымышленные данные: добавьте `TEACHER_ROSTER_FILE=/app/database/fixtures/teacher_roster.csv` в локальный `.env` перед первым запуском. Уже работающая база не требует повторного импорта.
 
 Откройте http://localhost:8080. Административный вход — `/go.php`; вход преподавателей — `/teachers_access.php`. Пароли находятся в локальном `.env`, который исключён из Git и Docker-контекста. `APP_PORT` позволяет выбрать другой локальный порт.
 
@@ -46,6 +51,7 @@ docker compose exec -T app php bin/migrate.php --demo
 Запускайте проверки на отдельном Compose-проекте, чтобы не затрагивать рабочие данные. Пример после подготовки `.env`:
 
 ```bash
+export TEACHER_ROSTER_FILE=/app/database/fixtures/teacher_roster.csv
 APP_PORT=18080 docker compose -p scheduler-test up -d --build --wait
 APP_PORT=18080 docker compose -p scheduler-test exec -T app php bin/migrate.php --demo
 APP_PORT=18080 docker compose -p scheduler-test exec -T app php < tests/integration.php
@@ -68,7 +74,7 @@ docker build --platform linux/amd64 -t scheduler:cloud-check .
 
 ## Схема и обновление существующих данных
 
-Актуальная схема находится в `database/schema.sql`; последовательность обновлений — в `bin/migrate.php`. Миграции повторяемы и защищены блокировкой MySQL. Исторические дампы и XLSX в `docs/` не используются при запуске и не попадают в образ. Проверенный CSV списка преподавателей находится в `database/imports/` и включён в образ для одноразовой миграции `007`.
+Актуальная схема находится в `database/schema.sql`; последовательность обновлений — в `bin/migrate.php`. Миграции повторяемы и защищены блокировкой MySQL. Исторические дампы и XLSX в `docs/` не используются при запуске и не попадают в образ. Реальный CSV списка преподавателей хранится локально в `database/imports/`, исключён из Git и Docker-образа и подключается локальным Compose только для чтения. Первому облачному импорту нужен Actions secret `TEACHER_ROSTER_CSV`; уже применённая `007` не требует CSV для следующих релизов.
 
 Перед миграцией существующей базы сделайте резервную копию и проверьте восстановление в отдельной БД. Скрипт добавляет недостающие поля, переводит таблицы на utf8mb4, исправляет ключ счётчика и вводит уникальность `(teacher_id, time)`. При наличии повторных или недопустимых временных слотов он останавливается, сохраняя записи для ручного исправления. MySQL DDL не является полностью транзакционным: повторный запуск продолжит незавершённую миграцию.
 
@@ -153,3 +159,9 @@ Secret Manager получает версии из Terraform: значения о
 - Не публикуйте реальные SQL-дампы и действующие секреты. Старые ключи, которые могли попасть в прежние образы, следует отозвать.
 
 `vendor/` добавлен в `.gitignore`, но в исходном репозитории его файлы уже отслеживаются. После самостоятельной проверки изменений решите, когда убрать их из Git index: зависимости воспроизводимо устанавливаются из `composer.lock` при сборке. Скрипты проекта не выполняют git add/commit/push.
+
+## Использование на телефоне
+
+На узком экране выбор предмета, преподавателя и времени идёт последовательно. Кнопка назад позволяет изменить выбор. Кнопки и пункты списков имеют высоту не меньше 44 px, поля формы — шрифт 16 px. На широком экране списки видны рядом. Используются существующий Fomantic UI и `public/app.css`, без дополнительных библиотек.
+
+Реальные данные преподавателей остаются в БД и приватных локальных файлах. [Очистка Git и истории](docs/PRIVATE-DATA.md).

@@ -9,6 +9,7 @@ x-app-environment: &app-environment
   DB_PASSWORD: ${DB_PASSWORD:?Set DB_PASSWORD in .env}
   ADMIN_PASSWORD: ${ADMIN_PASSWORD:?Set ADMIN_PASSWORD in .env}
   TEACHERS_PASSWORD: ${TEACHERS_PASSWORD:?Set TEACHERS_PASSWORD in .env}
+  TEACHER_ROSTER_FILE: ${TEACHER_ROSTER_FILE:-/app/database/imports/pedagogu_saraksts_2026.csv}
 
 services:
   db:
@@ -29,6 +30,8 @@ services:
   migrate:
     image: scheduler:local
     environment: *app-environment
+    volumes:
+      - ./database/imports:/app/database/imports:ro
     command: [php, bin/migrate.php]
     depends_on:
       db:
@@ -37,6 +40,8 @@ services:
     image: scheduler:local
     build: .
     environment: *app-environment
+    volumes:
+      - ./database/imports:/app/database/imports:ro
     ports:
       - "127.0.0.1:${APP_PORT:-8080}:8080"
     depends_on:

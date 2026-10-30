@@ -17,3 +17,4 @@
 !*.php
 !logo.png
 !logo.ico
+database/imports/*.csv

@@ -1,10 +1,10 @@
 # Релиз через GitHub Actions
 
-Этот выпуск добавляет несколько предметов у одного преподавателя и **один раз заменяет всех учителей и записи к ним** списком из `docs/pedagogu_saraksts.xlsx`: 103 учителя без назначенных предметов. Тексты сайта и предметы сохраняются. [Что именно импортируется](TEACHER-ROSTER.md).
+Текущий выпуск адаптирует страницы для телефона и убирает реальные данные преподавателей из Git. На телефоне предмет, учитель и время выбираются последовательно, есть кнопка назад; на компьютере списки расположены рядом. Существующие учителя, тексты, предметы и записи в БД сохраняются.
 
-## 1. Проверить переменные
+## Переменные GCP
 
-В GitHub откройте **Settings → Secrets and variables → Actions → Variables**. Можно также использовать переменные environment `production`. Нужны именно **Variables**, поскольку workflow читает `vars.*`:
+В **Settings → Secrets and variables → Actions → Variables** или в environment `production` проверьте:
 
 | Переменная | Значение |
 | --- | --- |
@@ -13,76 +13,38 @@
 | `GCP_WORKLOAD_IDENTITY_PROVIDER` | `projects/109229299371/locations/global/workloadIdentityPools/scheduler-github-2026/providers/github` |
 | `GCP_DEPLOY_SERVICE_ACCOUNT` | `scheduler-deploy@vecaku-diena-2026.iam.gserviceaccount.com` |
 
-Рабочий pipeline уже использует Workload Identity Federation; JSON-ключ для этого выпуска не нужен.
+Если `007_teacher_roster_2026` уже выполнена в GCP, CSV для выпуска не требуется. Если ещё не выполнена, добавьте Actions **secret** `TEACHER_ROSTER_CSV` с полным содержимым локального CSV, включая заголовок. Pipeline передаст его только выполнению миграций; данные не включаются в Git или образ. После первого импорта секрет можно удалить. [Подробности импорта](TEACHER-ROSTER.md).
 
-## 2. Создать резервную копию базы
+## Текущий выпуск с очисткой истории
 
-Перед merge в `main` выполните и дождитесь успешного завершения:
+Чтобы убрать имена и из прежних коммитов, используйте [пошаговую инструкцию очистки Git](PRIVATE-DATA.md). Порядок: локальный коммит → повторная подготовка проверенного mirror → ручная публикация очищенных веток → запуск pipeline для `main`. До завершения очистки не отправляйте обычный push из старой истории.
+
+Автоматическая публикация истории и force push инструментами проекта не выполняются.
+
+## Последующие обычные выпуски
+
+После очистки работайте из нового clone. Создавайте PR рабочей ветки в `main`, дождитесь успешного `verify` и выполните merge. Для важных изменений данных предварительно можно создать резервную копию:
 
 ```bash
 gcloud sql backups create \
   --instance=vecaku-diena \
   --project=vecaku-diena-2026 \
-  --description="Before multiple subjects and teacher roster replacement"
+  --description="Before application release"
 ```
 
-Команда ожидает завершения, если не указан `--async`. [Документация Cloud SQL backup](https://docs.cloud.google.com/sdk/gcloud/reference/sql/backups/create).
+[Документация резервной копии Cloud SQL](https://docs.cloud.google.com/sdk/gcloud/reference/sql/backups/create).
 
-## 3. Сохранить изменения и открыть PR
+Workflow **Build, verify and deploy**:
 
-Из корня проекта создайте рабочую ветку, если сейчас находитесь в `main`:
+1. Соберёт образ и проверит бронирование, несколько предметов, индивидуальные часы, сообщение об отсутствии, миграции и HTTP на вымышленных данных.
+2. Загрузит образ `linux/amd64` в Artifact Registry.
+3. Выполнит Cloud Run Job `php bin/migrate.php`. Уже применённая `007` пропускается без CSV и без сброса данных.
+4. Выпустит сервис `vecaku-diena-cloudrun` и проверит `/healthz.php`.
 
-```bash
-git switch -c feature/teacher-subjects-roster
-```
+Для этого выпуска `terraform apply` и повторный SQL-импорт не нужны. Cloudflare Worker продолжит использовать прежний Cloud Run URL.
 
-Проверьте изменения и добавьте файлы этого выпуска:
+## Проверить результат
 
-```bash
-git status --short
-git diff
+На телефоне откройте <https://esgribu.lv/>. Проверьте выбор предмета и учителя, возврат назад, выбор времени и отправку формы. В админке проверьте поиск и редактирование учителя. Уже занятый слот должен быть заблокирован во всех предметах этого учителя; учитель с выключенным **Būs** показывает сообщение вместо времён.
 
-git add -- .github/workflows/google-cloudrun-docker.yml README.md parents.php \
-  bin/migrate.php bin/convert_teacher_roster.py \
-  database/schema.sql database/imports/pedagogu_saraksts_2026.csv \
-  src/TeacherRoster.php src/Model/Teacher.php src/Model/Subject.php \
-  tests/reception_hours.php tests/unavailable_teacher.php tests/multiple_subjects.php \
-  tests/teacher_roster_conversion.py tests/roster_import.php \
-  tests/migrations.sh tests/verify_migration.php \
-  docs/pedagogu_saraksts.xlsx docs/TEACHER-ROSTER.md docs/RELEASE.md docs/GCP-DEPLOYMENT.md
-
-git diff --cached --stat
-git commit -m "Support multiple teacher subjects and replace the teacher roster"
-git push -u origin feature/teacher-subjects-roster
-```
-
-Откройте PR этой ветки в **main** и дождитесь зелёного **verify**. Он собирает образ, проверяет совпадение XLSX и CSV, старую и новую схемы, сохранность данных при импорте, повторные миграции, общие слоты и прежние функции приложения на отдельной MySQL.
-
-## 4. Выпустить main
-
-Выполните merge PR. Workflow **Build, verify and deploy** автоматически запустится для `main`:
-
-1. `verify` проверит приложение.
-2. `deploy` соберёт и загрузит образ в Artifact Registry.
-3. Cloud Run Job выполнит `php bin/migrate.php`: сначала `006_teacher_multiple_subjects`, затем `007_teacher_roster_2026`.
-4. После успешных миграций pipeline развернёт новую ревизию `vecaku-diena-cloudrun` и проверит `/healthz.php`.
-
-Для работающего проекта не нужны ручной SQL-импорт и `terraform apply`. Cloudflare Worker продолжит использовать прежний адрес Cloud Run.
-
-Повторный запуск пропускает `007`: ручные назначения предметов, новые записи родителей и изменённые часы останутся на месте. Если импорт завершился, а последующий deploy упал, устраните ошибку и повторите pipeline. При ошибке самого импорта его транзакция откатится полностью.
-
-## 5. Назначить предметы и проверить сайт
-
-Откройте <https://esgribu.lv/go.php>, затем **Skolotāji**:
-
-- В списке 103 новых учителя с кабинетами из файла; Tatjana Aļeņina одна.
-- В редактировании учителя выберите один или несколько **Priekšmeti** и сохраните. До назначения предмета учитель виден только в административном/учительском списке.
-- Настройте индивидуальные часы и **Būs**, где необходимо. После импорта часы по умолчанию 17:00–19:00.
-- На странице родителей проверьте, что учитель появляется в обоих выбранных предметах с одинаковыми временами. Запись на один слот должна блокировать его в обоих предметах.
-- Проверьте сохранность **Priekšmeti** и **Virsraksti**. Сообщение об отсутствии остаётся редактируемым как прежде.
-
-Импорт не восстанавливается откатом только контейнерного образа: для возврата старого списка и старых записей потребуется резервная копия БД. Не удаляйте отметку `007_teacher_roster_2026` для повторного выпуска.
-
-## Ручной повторный запуск
-
-Откройте **Actions → Build, verify and deploy → Run workflow → Branch: main → Run workflow**. Workflow с `workflow_dispatch` должен быть в ветке по умолчанию. [Документация GitHub](https://docs.github.com/en/actions/how-tos/manage-workflow-runs/manually-run-a-workflow).
+Ручной повторный запуск: **Actions → Build, verify and deploy → Run workflow → Branch: main → Run workflow**. [Документация GitHub](https://docs.github.com/en/actions/how-tos/manage-workflow-runs/manually-run-a-workflow).

@@ -23,6 +23,8 @@ jobs:
   verify:
     runs-on: ubuntu-latest
     timeout-minutes: 20
+    env:
+      TEACHER_ROSTER_FILE: /app/database/fixtures/teacher_roster.csv
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
       - name: Create isolated test credentials
@@ -85,9 +87,25 @@ jobs:
           docker push "$IMAGE"
           echo "APP_IMAGE=$IMAGE" >> "$GITHUB_ENV"
       - name: Apply database migrations before releasing application
+        env:
+          TEACHER_ROSTER_CSV: ${{ secrets.TEACHER_ROSTER_CSV }}
         run: |
           gcloud run jobs update "$SERVICE-migrate" --image="$APP_IMAGE" --region="$REGION" --quiet
-          gcloud run jobs execute "$SERVICE-migrate" --region="$REGION" --wait --quiet
+          if [ -n "$TEACHER_ROSTER_CSV" ]; then
+            python3 - <<'PYTHON'
+          import json
+          import os
+          from pathlib import Path
+          path = Path(os.environ['RUNNER_TEMP']) / 'teacher-roster-flags.json'
+          path.write_text(json.dumps({'--update-env-vars': {'TEACHER_ROSTER_CSV': os.environ['TEACHER_ROSTER_CSV']}}))
+          path.chmod(0o600)
+          PYTHON
+            trap 'rm -f "$RUNNER_TEMP/teacher-roster-flags.json"' EXIT
+            gcloud run jobs execute "$SERVICE-migrate" --region="$REGION" --wait --quiet \
+              --flags-file="$RUNNER_TEMP/teacher-roster-flags.json"
+          else
+            gcloud run jobs execute "$SERVICE-migrate" --region="$REGION" --wait --quiet
+          fi
       - name: Deploy verified revision
         id: deploy
         uses: google-github-actions/deploy-cloudrun@2028e2d7d30a78c6910e0632e48dd561b064884d # v3
